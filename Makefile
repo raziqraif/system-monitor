@@ -1,2 +1,6 @@
+CC = gcc -g -Wall -Werror
+SRC = main.c gui.c process.c
+BIN = "System Monitor"
+
 system_monitor:
-	gcc `pkg-config --cflags gtk+-3.0` -o "System Monitor" main.c gui.c process.c `pkg-config --libs gtk+-3.0`
+	$(CC) `pkg-config --cflags gtk+-3.0` -o $(BIN) $(SRC) `pkg-config --libs gtk+-3.0`
