@@ -1,31 +1,8 @@
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/types.h>
-
-#define MAX_PROCS (1024)
+#include "process.h"
 
 char CPUINFO_PATH[] = "/proc/cpuinfo";
 char MEMINFO_PATH[] = "/proc/meminfo";
 char VERSION_PATH[] = "/proc/version";
-
-
-typedef struct {
-  char *name;
-  char *status;
-  char *owner;
-  int cpu;
-  int id;
-  float mem;
-} process_t;
-
-typedef struct {
-  process_t **procs;
-  int num_procs;
-  int total_space;
-} proc_list_t;
 
 
 /*
@@ -119,6 +96,9 @@ void print_proc(process_t *proc) {
 } /* print_proc() */
 
 
+/*
+ * adds a process_t * to the given proc_list.
+ */
 void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   if (proc_list->total_space == 0) {
     printf("proc_list is empty, mallocing space. this should not occur.\n");
@@ -136,7 +116,8 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   proc_list->num_procs++;
   printf("added proc %d to position: %d\n", new_proc->id, proc_list->num_procs - 1);
   //print_proc(new_proc);
-}
+} /* add_proc() */
+
 
 /*
  * Populates a proc_list_t with process found in /proc.
@@ -165,8 +146,8 @@ proc_list_t *get_processes() {
 } /* get_processes() */
 
 
+/*
 int main(){
-
   get_processes();
 
   DIR *dir = opendir("/proc/");
@@ -184,9 +165,6 @@ int main(){
   printf("Amount of Memory: %s\n", "idk");
   printf("Processor Version: %s\n", "idk");
   printf("Disk Storage: %s\n", "idk");
-
   closedir(dir);
-
   return 0;
-
-}
+}*/
