@@ -9,13 +9,20 @@
 
 #include "gui.h"
 
-#define MAIN_WINDOW_UI_FILE "./ui_files/main_window.glade"
+#define DEBUG (1)
 
 /*
  * Runs the application 
  */
 
 int main(int argc, char *argv[]) {
-  init_application(argc, argv);
 
+  application_t *app = init_application(argc, argv);
+  gtk_widget_show(app->appw_main);
+  gtk_main(); 
+
+  if (DEBUG) {
+    printf("Application returned\n");
+  }
+  return 0;
 } /* main() */

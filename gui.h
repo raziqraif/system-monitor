@@ -35,14 +35,14 @@ typedef struct file_systems {
 // Main application
 typedef struct application {
   GtkWidget *appw_main; // Application window
-  GtkWidget *menu_bar;
+  GtkWidget *mnu_bar;
   system_t system_tab;
   processes_t processes_tab;
   resources_t resources_tab;
   file_systems_t file_systems_tab;
 } application_t;
 
-void init_application(int argc, char *argv[]);
+application_t *init_application(int argc, char *argv[]);
 void clear_application_memory(application_t *);
 
 #endif // GUI_H
