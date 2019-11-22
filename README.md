@@ -1,1 +1,6 @@
-# CS252-Project6
+# System Monitor
+
+A system monitor program for Linux that displays pertinent system information
+similar to the Windows Task Manager.
+
+The displayed information is retrieved from the /proc filesystem.
