@@ -1,3 +1,5 @@
+#ifndef PROCESS_H
+#define PROCESS_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,3 +32,4 @@ void print_proc(process_t *proc);
 void add_proc(proc_list_t *proc_list, process_t *new_proc);
 proc_list_t *get_processes();
 
+#endif // PROCESS_H
