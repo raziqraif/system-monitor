@@ -12,37 +12,37 @@ typedef struct system {
   GtkWidget *lbl_memory;
   GtkWidget *lbl_processor;
   GtkWidget *lbl_available_disk_space;
-} system_t;
+} system_tab_t;
 
 // Processes tab in application
 typedef struct processes {
   GtkWidget *lbl_description;
   GtkWidget *trv_processes; // Treeview
   GtkWidget *btn_end_process;
-} processes_t;
+} processes_tab_t;
 
 // Resources tab in application
 typedef struct resources {
   // TODO: Update this after completing the GUI
   GtkWidget *dummy_widget;
-} resources_t;  
+} resources_tab_t;
 
 // File systems tab in application
 typedef struct file_systems {
   GtkWidget *trv_devices; // Treeview
-} file_systems_t;
+} file_systems_tab_t;
 
 // Main application
 typedef struct application {
   GtkWidget *appw_main; // Application window
   GtkWidget *mnu_bar;
-  system_t system_tab;
-  processes_t processes_tab;
-  resources_t resources_tab;
-  file_systems_t file_systems_tab;
+  system_tab_t *system_tab;
+  processes_tab_t *processes_tab;
+  resources_tab_t *resources_tab;
+  file_systems_tab_t *file_systems_tab;
 } application_t;
 
 application_t *init_application(int argc, char *argv[]);
-void clear_application_memory(application_t *);
+void free_application(application_t *);
 
 #endif // GUI_H

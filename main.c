@@ -17,6 +17,7 @@
 
 int main(int argc, char *argv[]) {
 
+  gtk_init(&argc, &argv);
   application_t *app = init_application(argc, argv);
   gtk_widget_show(app->appw_main);
   gtk_main(); 
@@ -24,5 +25,8 @@ int main(int argc, char *argv[]) {
   if (DEBUG) {
     printf("Application returned\n");
   }
+  
+  free_application(app);
+  app = NULL;  
   return 0;
 } /* main() */
