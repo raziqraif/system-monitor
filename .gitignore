@@ -1,5 +1,4 @@
 ui_files/*~
-"System Monitor"
 
 # Prerequisites
 *.d
@@ -53,3 +52,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+#Other
+.vscode
