@@ -14,7 +14,14 @@ typedef struct {
   char *status;
   char *owner;
   int cpu;
-  int id;
+  int pid;
+  int ppid;
+  int uid;
+  int vmsize;
+  int vmrss;
+  int vmdata;
+  int vmstack;
+  int vmexe;
   float mem;
 } process_t;
 
@@ -25,6 +32,7 @@ typedef struct {
 } proc_list_t;
 
 char *file_to_str(char *filepath);
+char *get_uname(int uid);
 char *get_line_by_key(char *filebuffer, char *key);
 process_t *get_process_info(int pid);
 void free_process_t(process_t *proc);

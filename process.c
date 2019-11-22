@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <pwd.h>
 #include <sys/types.h>
 
 #include "process.h"
@@ -15,6 +16,7 @@ char VERSION_PATH[] = "/proc/version";
  * Open the file and malloc a string to hold its contents.
  * returned string must be freed by caller.
  */
+
 char *file_to_str(char *filepath) {
   FILE *fp = fopen(filepath, "r");
   if (fp == NULL) {
@@ -35,10 +37,24 @@ char *file_to_str(char *filepath) {
 
 
 /*
+ * return a malloc'd username string from given UID
+ */
+
+char *get_uname(int uid){
+  struct passwd *pd = getpwuid(uid);
+  if (pd == NULL) {
+    return strdup("NAMELESS");
+  }
+  return strdup(pd->pw_name);
+} /* get_uname() */
+
+
+/*
  * Searches for a line in a filebuffer, then returns a newly
  * malloc'd string of the line.
  * returns NULL if not found.
  */
+
 char *get_line_by_key(char *filebuffer, char *key) {
   char *key_spot = strstr(filebuffer, key);
   if (key_spot == NULL) {
@@ -58,24 +74,77 @@ char *get_line_by_key(char *filebuffer, char *key) {
 
 
 /*
+ * extracts int from string of form found in /proc/[pid]/status,
+ * where an integer is found between the last and penultimate spaces.
+ */
+
+int parse_vm_int(char *line) {
+  char *last_space = strrchr(line, ' ');
+  last_space[0] = '\0';
+  char *penultimate_space = strrchr(line, ' ');
+  int val = atoi(penultimate_space);
+  free(line);
+  return val;
+} /* parse_vm_int() */
+
+
+/*
  * Mallocs a new process_t and fills its fields.
  */
+
 process_t *get_process_info(int pid) {
-  char path[512];
+  char path[128];
   sprintf(path, "/proc/%d/status", pid);
   char *full_status = file_to_str(path);
   if (full_status == NULL) {
     return NULL;
   }
+
+  /*sprintf(path, "/proc/%d/stat", pid);
+  char *full_stat = file_to_str(path);
+  if (full_stat == NULL) {
+    return NULL;
+  }*/
+
+  char *ppid_line = get_line_by_key(full_status, "PPid:");
+  char *last_space = strrchr(ppid_line, ' ');
+  int ppid = atoi(last_space + 1);
+  free(ppid_line);
+
+  char *uid_line = get_line_by_key(full_status, "Uid:");
+  last_space = strrchr(uid_line, ' ');
+  int uid = atoi(last_space + 1);
+  free(uid_line);
+
+  /*char *vmsize_line = get_line_by_key(full_status, "VmSize:");
+  last_space = strrchr(vmsize_line, ' ');
+  last_space[0] = '\0';
+  char *penultimate_space = strrchr(vmsize_line, ' ');
+  int vmsize = atoi(penultimate_space);
+  free(vmsize_line);
+
+  char *vmrss_line = get_line_by_key(full_status, "VmRSS:");
+  last_space = strrchr(vmrss_line, ' ');
+  last_space[0] = '\0';
+  penultimate_space = strrchr(vmrss_line, ' ');
+  int vmrss = atoi(penultimate_space);
+  free(vmrss_line);*/
+
   process_t *new_proc = malloc(sizeof(process_t));
 
   new_proc->name = get_line_by_key(full_status, "Name:");
   new_proc->status = get_line_by_key(full_status, "State:");
-  new_proc->owner = NULL;
+  new_proc->owner = get_uname(uid);
   new_proc->cpu = 0;
-  new_proc->id = pid;
+  new_proc->pid = pid;
+  new_proc->ppid = ppid;
+  new_proc->uid = uid;
   new_proc->mem = 0.0;
-
+  new_proc->vmsize = parse_vm_int(get_line_by_key(full_status, "VmSize:"));
+  new_proc->vmrss = parse_vm_int(get_line_by_key(full_status, "VmRSS:"));
+  new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
+  new_proc->vmstack = parse_vm_int(get_line_by_key(full_status, "VmStack:"));
+  new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
   return new_proc;
 } /* get_process_info() */
 
@@ -83,6 +152,7 @@ process_t *get_process_info(int pid) {
 /*
  * Free the malloc'd fields of a process_t.
  */
+
 void free_process_t(process_t *proc) {
   free(proc->name);
   free(proc->status);
@@ -94,17 +164,31 @@ void free_process_t(process_t *proc) {
 
 
 /*
+ * Free all processes in proc_list_t
+ */
+
+void free_proc_list_t(proc_list_t *list) {
+  for (int i = 0; i < list->num_procs; i++) {
+    free_process_t(list->procs[i]);
+    free(list->procs[i]);
+    list->procs[i] = NULL;
+  }
+} /* free_proc_list_t() */
+
+/*
  * Print contents of a process_t.
  */
+
 void print_proc(process_t *proc) {
   printf("======\nName: %s\nStatus: %s\nOwner: %s\nCPU: %d\nID: %d\nMem: %f\n",
-        proc->name, proc->status, proc->owner, proc->cpu, proc->id, proc->mem);
+        proc->name, proc->status, proc->owner, proc->cpu, proc->pid, proc->mem);
 } /* print_proc() */
 
 
 /*
  * adds a process_t * to the given proc_list.
  */
+
 void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   if (proc_list->total_space == 0) {
     printf("proc_list is empty, mallocing space. this should not occur.\n");
@@ -120,7 +204,7 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   }
   proc_list->procs[proc_list->num_procs] = new_proc;
   proc_list->num_procs++;
-  printf("added proc %d to position: %d\n", new_proc->id, proc_list->num_procs - 1);
+  printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
   //print_proc(new_proc);
 } /* add_proc() */
 
@@ -128,6 +212,7 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
 /*
  * Populates a proc_list_t with process found in /proc.
  */
+
 proc_list_t *get_processes() {
   proc_list_t *proc_list = malloc(sizeof(proc_list_t));
   proc_list->num_procs = 0;
