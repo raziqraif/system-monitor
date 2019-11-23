@@ -8,6 +8,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+#include "sysinfo.h"
+
 #define MAIN_WINDOW_UI_FILE "./ui_files/main_window.glade"
 
 /*
@@ -63,6 +65,17 @@ application_t *init_application(int argc, char *argv[]) {
     gtk_builder_get_object(builder, "trv_devices"));
     
   g_object_unref(G_OBJECT(builder));
+
+  // Update System Info 
+  system_info_t *sys_info = get_sys_info();
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_kernel_version),
+    sys_info->kernel_version);
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_memory),
+    sys_info->memory);
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_processor),
+    sys_info->process_version);
+  
+  // TODO: Free sys_info
 
   return app;
 } /* init_application() */
