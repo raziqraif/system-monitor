@@ -1,5 +1,5 @@
 CC = gcc -g -Wall -Werror
-SRC = main.c gui.c process.c
+SRC = main.c gui.c process.c sysinfo.c
 BIN = "System Monitor"
 
 system_monitor:
