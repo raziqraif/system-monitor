@@ -37,4 +37,17 @@ system_info_t *get_sys_info() {
   //free(disk_space);
 
   return system_info;
+} /* get_sys_info() */
+
+/*
+ * Returns 0 on success, returns 1 on failure
+ */
+
+void free_sys_info(system_info_t *system_info) {
+  free(system_info->kernal_version);
+  free(system_info->memory);
+  free(system_info->process_version);
+  free(system_info->disk_space);
+
+  free(system_info);
 }
