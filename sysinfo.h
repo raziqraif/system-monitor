@@ -1,10 +1,8 @@
 #ifndef SYSINFO_H
 #define SYSINFO_H
 
-#include "process.h"
-
 typedef struct {
-  char *kernal_version;
+  char *kernel_version;
   char *memory;
   char *process_version;
   char *disk_space;
