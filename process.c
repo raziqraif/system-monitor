@@ -9,16 +9,14 @@
 
 #include "process.h"
 
-char CPUINFO_PATH[] = "/proc/cpuinfo";
-char MEMINFO_PATH[] = "/proc/meminfo";
-char VERSION_PATH[] = "/proc/version";
-
-/*char STAT_FORMAT[] = "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu "
-  "%*lu %*lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %*lu %*ld %*lu %*lu %*lu "
+char STAT_FORMAT[] = "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu "
+  "%lu %lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %*lu %*ld %*lu %*lu %*lu "
   "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu "
-  "%*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d"*/
+  "%*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d";
 
 int g_btime = 0;
+int g_update_flag = 1;
+time_t g_update_time = 0;
 
 /*
  * Open the file and malloc a string to hold its contents.
@@ -66,7 +64,7 @@ char *get_uname(int uid){
 char *get_line_by_key(char *filebuffer, char *key) {
   char *key_spot = strstr(filebuffer, key);
   if (key_spot == NULL) {
-    printf("could not find: %s\n", key);
+    //printf("could not find: %s\n", key);
     return NULL;
   }
   char *newline_spot = strchr(key_spot, '\n');
@@ -80,6 +78,26 @@ char *get_line_by_key(char *filebuffer, char *key) {
   //printf("found: %s\n", line);
   return line;
 } /* get_line_by_key() */
+
+
+/*
+ * returns malloc'd string representing the last part of line after splitting
+ * on delim.
+ * Frees the given line.
+ */
+
+char *get_val_from_line(char *line, char delim) {
+  if (line == NULL) {
+    return NULL;
+  }
+  char *first_occur = strchr(line, delim);
+  if (first_occur == NULL) {
+    return NULL;
+  }
+  char *val = strdup(first_occur + 1);
+  free(line);
+  return val;
+} /* get_val_from_line() */
 
 
 /*
@@ -105,7 +123,6 @@ int parse_vm_int(char *line) {
  */
 
 process_t *get_process_info(int pid) {
-  printf("getting info for: %d\n", pid);
   char path[128];
   sprintf(path, "/proc/%d/status", pid);
   char *full_status = file_to_str(path);
@@ -125,7 +142,7 @@ process_t *get_process_info(int pid) {
     tok = strtok(NULL, " ");
   }
 
-  printf("21st tok: %s\n", tok);
+  //printf("21st tok: %s\n", tok);
   long long starttime_ticks = atoll(tok);
   long long starttime_secs = starttime_ticks / sysconf(_SC_CLK_TCK);
   time_t starttime = starttime_secs + g_btime;
@@ -141,42 +158,61 @@ process_t *get_process_info(int pid) {
   int uid = atoi(last_space + 1);
   free(uid_line);
 
-  //sscanf(full_stat, STAT_FORMAT, "")
-
-  /*char *vmsize_line = get_line_by_key(full_status, "VmSize:");
-  last_space = strrchr(vmsize_line, ' ');
-  last_space[0] = '\0';
-  char *penultimate_space = strrchr(vmsize_line, ' ');
-  int vmsize = atoi(penultimate_space);
-  free(vmsize_line);
-
-  char *vmrss_line = get_line_by_key(full_status, "VmRSS:");
-  last_space = strrchr(vmrss_line, ' ');
-  last_space[0] = '\0';
-  penultimate_space = strrchr(vmrss_line, ' ');
-  int vmrss = atoi(penultimate_space);
-  free(vmrss_line);*/
-
   process_t *new_proc = malloc(sizeof(process_t));
-  new_proc->name = get_line_by_key(full_status, "Name:");
-  new_proc->status = get_line_by_key(full_status, "State:");
+  new_proc->name = get_val_from_line(get_line_by_key(full_status, "Name:"), '\t');
+  new_proc->status = get_val_from_line(get_line_by_key(full_status, "State:"), '\t');
   new_proc->owner = get_uname(uid);
   new_proc->starttime = starttime_str;
   new_proc->cpu = 0;
   new_proc->pid = pid;
   new_proc->ppid = ppid;
   new_proc->uid = uid;
-  new_proc->mem = 0.0;
   new_proc->vmsize = parse_vm_int(get_line_by_key(full_status, "VmSize:"));
   new_proc->vmrss = parse_vm_int(get_line_by_key(full_status, "VmRSS:"));
   new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
   new_proc->vmstk = parse_vm_int(get_line_by_key(full_status, "VmStk:"));
   new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
+  new_proc->mem = new_proc->vmdata + new_proc->vmstk + new_proc->vmexe;
+  new_proc->update_flag = g_update_flag;
+
+  sscanf(full_stat, STAT_FORMAT, &(new_proc->utime), &(new_proc->stime));
 
   free(full_status);
   free(full_stat);
   return new_proc;
 } /* get_process_info() */
+
+
+/*
+ * Binary Search the proc_list_t for a process_t with given pid.
+ * returns -1 if not found.
+ */
+int find_proc(int pid, proc_list_t *proc_list) {
+  int check = proc_list->num_procs / 2;
+  int start = 0;
+  int end = proc_list->num_procs;
+  while (1) {
+    if (proc_list->procs[check]->pid == pid) {
+      return check;
+    }
+    if (start == end) {
+      return -1;
+    }
+    if (proc_list->procs[check]->pid > pid) {
+      if (end == check) {
+        return -1;
+      }
+      end = check;
+    }
+    else if (proc_list->procs[check]->pid < pid) {
+      if (start == check) {
+        return -1;
+      }
+      start = check;
+    }
+    check = (start + end) / 2;
+  }
+} /* find_proc() */
 
 
 /*
@@ -212,7 +248,11 @@ void free_proc_list_t(proc_list_t *list) {
  */
 
 void print_proc(process_t *proc) {
-  printf("======Name: %s\nStatus: %s\nOwner: %s\nCPU: %d\nID: %d\nMem: %f\n"
+  if (proc == NULL) {
+    printf("XXXXXXXXXXXXXXXXXXXXX\n");
+    return;
+  }
+  printf("======Name: %s\nStatus: %s\nOwner: %s\nCPU: %f\nID: %d\nMem: %f\n"
          "Starttime: %s\n",
         proc->name, proc->status, proc->owner, proc->cpu, proc->pid, proc->mem,
         proc->starttime);
@@ -221,11 +261,12 @@ void print_proc(process_t *proc) {
 
 /*
  * adds a process_t * to the given proc_list.
+ * inserts into position sorted by ascending PID.
  */
 
 void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   if (proc_list->total_space == 0) {
-    printf("proc_list is empty, mallocing space. this should not occur.\n");
+    printf("proc_list is empty, initializing.");
     proc_list->procs = malloc(sizeof(process_t *) * MAX_PROCS);
     proc_list->procs[0] = new_proc;
     proc_list->num_procs = 1;
@@ -236,10 +277,19 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
     proc_list->total_space += MAX_PROCS;
     proc_list->procs = realloc(proc_list->procs, sizeof(process_t *) * (proc_list->total_space));
   }
-  proc_list->procs[proc_list->num_procs] = new_proc;
+  int pos = 0;
+  while (new_proc->pid > proc_list->procs[pos]->pid) {
+    pos++;
+    if (pos >= proc_list->num_procs/*proc_list->procs[pos] == NULL*/) {
+      break;
+    }
+  }
+  for (int i = proc_list->num_procs; i > pos; i--) {
+    proc_list->procs[i] = proc_list->procs[i - 1];
+  }
+  proc_list->procs[pos] = new_proc;
   proc_list->num_procs++;
-  printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
-  //print_proc(new_proc);
+  //printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
 } /* add_proc() */
 
 
@@ -260,14 +310,17 @@ proc_list_t *get_processes() {
   free(btime_line);
   free(full_stat);
 
+  g_update_time = time(0);
+
   proc_list_t *proc_list = malloc(sizeof(proc_list_t));
+  proc_list->procs = NULL;
   proc_list->num_procs = 0;
   proc_list->total_space = 0;
 
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
     printf("Could not open dir: %s\n", "/proc/");
-    return 0;
+    return NULL;
   }
   struct dirent *ent = readdir(dir);
   while(ent != NULL) {
@@ -284,24 +337,57 @@ proc_list_t *get_processes() {
 
 
 /*
-int main(){
-  get_processes();
-
+ * Update a proc_list_t. If a process no longer exists, it is freed and NULLed.
+ */
+void update_processes(proc_list_t *proc_list) {
+  printf("--------------------------updating processes\n");
+  g_update_flag++;
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
     printf("Could not open dir: %s\n", "/proc/");
-    return 0;
+    return;
+  }
+  time_t old_update_time = g_update_time;
+  g_update_time = time(0);
+  struct dirent *ent = readdir(dir);
+  while(ent != NULL) {
+    int pid = atoi(ent->d_name);
+    if (pid != 0) {
+      int idx = find_proc(pid, proc_list);
+      if (idx == -1) {
+        add_proc(proc_list, get_process_info(pid));
+      }
+      else {
+        long old_utime = proc_list->procs[idx]->utime;
+        long old_stime = proc_list->procs[idx]->stime;
+        free_process_t(proc_list->procs[idx]);
+        free(proc_list->procs[idx]);
+        proc_list->procs[idx] = get_process_info(pid);
+        long long used_clocks = ((proc_list->procs[idx]->utime + proc_list->procs[idx]->stime)
+                            - (old_utime + old_stime));
+        long long total_clocks = (g_update_time - old_update_time) * sysconf(_SC_CLK_TCK);
+        proc_list->procs[idx]->cpu = 100 * (float)used_clocks / (float)total_clocks;
+        printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
+      }
+    }
+    ent = readdir(dir);
+  }
+  closedir(dir);
+
+  int count = 0;
+  for (int i = 0; i < proc_list->num_procs; i++) {
+    if (proc_list->procs[i]->update_flag != g_update_flag) {
+      free_process_t(proc_list->procs[i]);
+      free(proc_list->procs[i]);
+      proc_list->procs[i] = NULL;
+    }
+    else {
+      count++;
+    }
   }
 
-  //char *cpuinfo = file_to_str(CPUINFO_PATH);
-  //char *meminfo = file_to_str(MEMINFO_PATH);
-  char *version = file_to_str(VERSION_PATH);
+  //now batch remove the NULL holes
 
-  printf("OS Release Version: %s\n", version);
-  //printf("Kernel Version: %s\n", cpuinfo);
-  printf("Amount of Memory: %s\n", "idk");
-  printf("Processor Version: %s\n", "idk");
-  printf("Disk Storage: %s\n", "idk");
-  closedir(dir);
-  return 0;
-}*/
+  printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
+} /* update_processes() */
+
