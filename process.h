@@ -13,6 +13,7 @@ typedef struct {
   char *name;
   char *status;
   char *owner;
+  char *starttime;
   int cpu;
   int pid;
   int ppid;
@@ -20,7 +21,7 @@ typedef struct {
   int vmsize;
   int vmrss;
   int vmdata;
-  int vmstack;
+  int vmstk;
   int vmexe;
   float mem;
 } process_t;
