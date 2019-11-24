@@ -251,77 +251,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkTreeView" id="trv_processes">
-                    <property name="width_request">575</property>
-                    <property name="height_request">510</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">tree_store_processes</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="trv_processes_selection"/>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="col_process_name">
-                        <property name="min_width">200</property>
-                        <property name="title" translatable="yes">Process Name</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="rnd_process_name">
-                            <property name="cell_background_gdk">#000000000000</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="col_status">
-                        <property name="min_width">90</property>
-                        <property name="title" translatable="yes">Status</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="rnd_status"/>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="col_cpu">
-                        <property name="min_width">70</property>
-                        <property name="title" translatable="yes">% CPU</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="rnd_cpu">
-                            <property name="background_gdk">#000000000000</property>
-                            <property name="foreground_gdk">#000000000000</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="col_id">
-                        <property name="min_width">90</property>
-                        <property name="title" translatable="yes">ID</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="rnd_id">
-                            <property name="background_gdk">#000000000000</property>
-                            <property name="foreground_gdk">#000000000000</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="col_memory">
-                        <property name="title" translatable="yes">Memory</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="rnd_memory">
-                            <property name="background_gdk">#000000000000</property>
-                            <property name="foreground_gdk">#000000000000</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkButton" id="btn_end_process">
                     <property name="label" translatable="yes">End process</property>
                     <property name="visible">True</property>
@@ -336,6 +265,76 @@
                   <packing>
                     <property name="left_attach">0</property>
                     <property name="top_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="scl_win_processes">
+                    <property name="width_request">575</property>
+                    <property name="height_request">510</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="trv_processes">
+                        <property name="width_request">575</property>
+                        <property name="height_request">510</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">tree_store_processes</property>
+                        <property name="search_column">0</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="col_process_name">
+                            <property name="min_width">200</property>
+                            <property name="title" translatable="yes">Process Name</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="rnd_process_name"/>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="col_status">
+                            <property name="min_width">90</property>
+                            <property name="title" translatable="yes">Status</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="rnd_status"/>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="col_cpu">
+                            <property name="min_width">70</property>
+                            <property name="title" translatable="yes">% CPU</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="rnd_cpu"/>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="col_id">
+                            <property name="min_width">90</property>
+                            <property name="title" translatable="yes">ID</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="rnd_id"/>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="col_memory">
+                            <property name="title" translatable="yes">Memory</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="rnd_memory"/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
                   </packing>
                 </child>
               </object>
@@ -387,91 +386,79 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView" id="trv_devices">
+              <object class="GtkScrolledWindow" id="scl_win_devices">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="model">lst_store_devices</property>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection" id="trv_devices_selection"/>
-                </child>
+                <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkTreeViewColumn" id="col_device">
-                    <property name="min_width">100</property>
-                    <property name="title" translatable="yes">Device</property>
+                  <object class="GtkTreeView" id="trv_devices">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">lst_store_devices</property>
+                    <property name="search_column">0</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_device">
-                        <property name="background_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_device">
+                        <property name="min_width">100</property>
+                        <property name="title" translatable="yes">Device</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_device"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_directory">
-                    <property name="min_width">100</property>
-                    <property name="title" translatable="yes">Directory</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_directory">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_directory">
+                        <property name="min_width">100</property>
+                        <property name="title" translatable="yes">Directory</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_directory"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_type">
-                    <property name="min_width">50</property>
-                    <property name="title" translatable="yes">Type</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_type">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_type">
+                        <property name="min_width">50</property>
+                        <property name="title" translatable="yes">Type</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_type"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_total">
-                    <property name="min_width">80</property>
-                    <property name="title" translatable="yes">Total</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_total">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_total">
+                        <property name="min_width">80</property>
+                        <property name="title" translatable="yes">Total</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_total"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_free">
-                    <property name="min_width">80</property>
-                    <property name="title" translatable="yes">Free</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_free">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_free">
+                        <property name="min_width">80</property>
+                        <property name="title" translatable="yes">Free</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_free"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_available">
-                    <property name="min_width">80</property>
-                    <property name="title" translatable="yes">Available</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_available">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_available">
+                        <property name="min_width">80</property>
+                        <property name="title" translatable="yes">Available</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_available"/>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_used">
-                    <property name="title" translatable="yes">Used</property>
                     <child>
-                      <object class="GtkCellRendererText" id="rnd_used">
-                        <property name="background_gdk">#000000000000</property>
-                        <property name="foreground_gdk">#000000000000</property>
+                      <object class="GtkTreeViewColumn" id="col_used">
+                        <property name="title" translatable="yes">Used</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="rnd_used"/>
+                        </child>
                       </object>
                     </child>
                   </object>
