@@ -44,12 +44,12 @@ typedef struct application {
 } application_t;
 
 application_t *init_application(int argc, char *argv[]);
-void load_application_widgets(application_t *, GtkBuilder *);
-void configure_system_tab(application_t *);
-void configure_processes_tab(application_t *);
-void configure_resources_tab(application_t *);
-void configure_file_systems_tab(application_t *);
-void update_processes_treeview(application_t *);
+void configure_system_tab(application_t *, GtkBuilder *);
+void configure_processes_tab(application_t *, GtkBuilder *);
+void configure_resources_tab(application_t *, GtkBuilder *);
+void configure_file_systems_tab(application_t *, GtkBuilder *);
 void free_application(application_t *);
+void update_processes_treeview(application_t *);
+void update_devices_treeview(application_t *);
 
 #endif // GUI_H

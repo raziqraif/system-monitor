@@ -32,33 +32,32 @@ application_t *init_application(int argc, char *argv[]) {
   assert(app->file_systems_tab);
 
   GtkBuilder *builder = gtk_builder_new_from_file(MAIN_WINDOW_UI_FILE);
-  load_application_widgets(app, builder);
 
-  configure_system_tab(app);
-  configure_processes_tab(app);
-  configure_resources_tab(app);
-  configure_file_systems_tab(app);
+  // Retrieve application window and menu bar
+  app->appw_main = GTK_WIDGET(gtk_builder_get_object(builder, "appw_main"));
+  assert(app->appw_main);  
+  app->mnu_bar = GTK_WIDGET(gtk_builder_get_object(builder, "mnu_bar"));
+  assert(app->mnu_bar);  
 
+  configure_system_tab(app, builder);
+  configure_processes_tab(app, builder);
+  configure_resources_tab(app, builder);
+  configure_file_systems_tab(app, builder);
+
+  g_signal_connect(app->appw_main, "destroy", G_CALLBACK(on_application_destroy), NULL);
+  gtk_builder_connect_signals(builder, NULL);
   update_processes_treeview(app); 
+  update_devices_treeview(app); 
  
+  g_object_unref(G_OBJECT(builder));
   return app;
 } /* init_application() */
 
 /*
- * Load the main widgets for application from file and assign it to argument
- * app. Called in init_application().
+ * Load and configure widgets in system_tab. Called in init_application().
  */
 
-void load_application_widgets(application_t *app, GtkBuilder *builder) {
-  // Retrieve application window and menu bar
-  app->appw_main = GTK_WIDGET(gtk_builder_get_object(builder, "appw_main"));
-  assert(app->appw_main);  
-  g_signal_connect(app->appw_main, "destroy", G_CALLBACK(on_application_destroy), NULL);
-  gtk_builder_connect_signals(builder, NULL);
-
-  app->mnu_bar = GTK_WIDGET(gtk_builder_get_object(builder, "mnu_bar"));
-  assert(app->mnu_bar);  
-
+void configure_system_tab(application_t *app, GtkBuilder *builder) {
   // Retrieve widgets for system tab
   system_tab_t *sys_tab = app->system_tab;
   sys_tab->lbl_os = GTK_WIDGET(
@@ -77,6 +76,27 @@ void load_application_widgets(application_t *app, GtkBuilder *builder) {
     gtk_builder_get_object(builder, "lbl_available_disk_space"));
   assert(sys_tab->lbl_available_disk_space);
 
+  // Update System Info 
+  system_info_t *sys_info = get_sys_info();
+  
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_kernel_version),
+    sys_info->kernel_version);
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_memory),
+    sys_info->memory);
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_processor),
+    sys_info->process_version);
+  // TODO: Update available disk memory
+  // TODO: Display os name too(?)
+
+  free_sys_info(sys_info);
+  sys_info = NULL;  
+} /* configure_system_tab() */
+
+/*
+ * Load and configure widgets in system tab. Called in init_application().
+ */
+
+void configure_processes_tab(application_t *app, GtkBuilder *builder) {
   // Retrieve widgets for processes_tab
   processes_tab_t *proc_tab = app->processes_tab;
   proc_tab->lbl_description = GTK_WIDGET(
@@ -108,49 +128,6 @@ void load_application_widgets(application_t *app, GtkBuilder *builder) {
   gtk_tree_view_column_add_attribute(col3, rnd3, "text", 2);
   gtk_tree_view_column_add_attribute(col4, rnd4, "text", 3);
   gtk_tree_view_column_add_attribute(col5, rnd5, "text", 4);
- 
-  // TODO: Create necessary GUI for resources tab and retrieve the widgets
-
-  // Retrieve widgets for file systems tab
-  app->file_systems_tab->trv_devices = GTK_TREE_VIEW(
-    gtk_builder_get_object(builder, "trv_devices"));
-  assert(app->file_systems_tab->trv_devices);
-  app->file_systems_tab->lst_store_devices = GTK_LIST_STORE(
-    gtk_builder_get_object(builder, "lst_store_devices"));
-  assert(app->file_systems_tab->lst_store_devices);
-
-  g_object_unref(G_OBJECT(builder));
-} /* load_application_widgets() */
-
-/*
- * Configure widgets in system_tab. Called in init_application().
- */
-
-void configure_system_tab(application_t *app) {
-  // Update System Info 
-  system_tab_t *sys_tab = app->system_tab;
-  system_info_t *sys_info = get_sys_info();
-  
-  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_kernel_version),
-    sys_info->kernel_version);
-  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_memory),
-    sys_info->memory);
-  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_processor),
-    sys_info->process_version);
-  // TODO: Update available disk memory
-  // TODO: Display os name too(?)
-
-  free_sys_info(sys_info);
-  sys_info = NULL;  
-} /* configure_system_tab() */
-
-/*
- * Configure widgets in system tab. Called in init_application().
- */
-
-void configure_processes_tab(application_t *app) {
-
-
 
   //g_object_unref(G_OBJECT(builder));
 } /* configure_processes_tab() */
@@ -159,16 +136,46 @@ void configure_processes_tab(application_t *app) {
  * Configure widgets in resources tab. Called in init_application().
  */
 
-void configure_resources_tab(application_t *app) {
+void configure_resources_tab(application_t *app, GtkBuilder *builder) {
 
 } /*configure_resources_tab() */
 
 /*
- * Configure widgets in file systems tab. Called in init_application().
+ * Load and configure widgets in file systems tab. Called in init_application().
  */
 
-void configure_file_systems_tab(application_t *app) {
+void configure_file_systems_tab(application_t *app, GtkBuilder *builder) {
+  // Retrieve widgets for file systems tab
+  app->file_systems_tab->trv_devices = GTK_TREE_VIEW(
+    gtk_builder_get_object(builder, "trv_devices"));
+  assert(app->file_systems_tab->trv_devices);
+  app->file_systems_tab->lst_store_devices = GTK_LIST_STORE(
+    gtk_builder_get_object(builder, "lst_store_devices"));
+  assert(app->file_systems_tab->lst_store_devices);
 
+  // File Systems Tab - Temporary variables to link treeview columns and
+  // cell renderers
+  GtkTreeViewColumn *col1_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_device"));
+  GtkTreeViewColumn *col2_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_directory"));
+  GtkTreeViewColumn *col3_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_type"));
+  GtkTreeViewColumn *col4_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_total"));
+  GtkTreeViewColumn *col5_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_free"));
+  GtkTreeViewColumn *col6_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_available"));
+  GtkTreeViewColumn *col7_d = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "col_used"));
+  GtkCellRenderer *rnd1_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_device"));
+  GtkCellRenderer *rnd2_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_directory"));
+  GtkCellRenderer *rnd3_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_type"));
+  GtkCellRenderer *rnd4_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_total"));
+  GtkCellRenderer *rnd5_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_free"));
+  GtkCellRenderer *rnd6_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_available"));
+  GtkCellRenderer *rnd7_d = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "rnd_used"));
+  gtk_tree_view_column_add_attribute(col1_d, rnd1_d, "text", 0);
+  gtk_tree_view_column_add_attribute(col2_d, rnd2_d, "text", 1);
+  gtk_tree_view_column_add_attribute(col3_d, rnd3_d, "text", 2);
+  gtk_tree_view_column_add_attribute(col4_d, rnd4_d, "text", 3);
+  gtk_tree_view_column_add_attribute(col5_d, rnd5_d, "text", 4);
+  gtk_tree_view_column_add_attribute(col6_d, rnd6_d, "text", 5);
+  gtk_tree_view_column_add_attribute(col7_d, rnd7_d, "text", 6);
 } /* configure_file_systems_tab() */
 
 /*
@@ -213,3 +220,27 @@ void update_processes_treeview(application_t *app) {
     gtk_tree_store_set(treestore, &iter, 4, "memory", -1);
   }
 } /* update_processes_treeview() */
+
+/*
+ * Update the list in devices treeview
+ */
+
+void update_devices_treeview(application_t *app) {
+  assert(app);
+  // TODO: Clear list store first before appending processes 
+  
+  GtkListStore *liststore = app->file_systems_tab->lst_store_devices;
+  GtkTreeIter iter;
+
+  // TODO: Get list of devices
+  for (int i = 0; i < 5; i++) {
+    gtk_list_store_append(liststore, &iter);
+    gtk_list_store_set(liststore, &iter, 0, "device", -1);
+    gtk_list_store_set(liststore, &iter, 1, "directory", -1);
+    gtk_list_store_set(liststore, &iter, 2, "type", -1);
+    gtk_list_store_set(liststore, &iter, 3, "total", -1);
+    gtk_list_store_set(liststore, &iter, 4, "free", -1);
+    gtk_list_store_set(liststore, &iter, 5, "available", -1);
+    gtk_list_store_set(liststore, &iter, 6, "used", -1);
+  }
+} /* update_devices_treeview() */
