@@ -18,6 +18,7 @@ typedef struct system {
 typedef struct processes {
   GtkWidget *lbl_description;
   GtkWidget *trv_processes; // Treeview
+  GtkTreeStore *tree_store_processes;
   GtkWidget *btn_end_process;
 } processes_tab_t;
 
@@ -30,6 +31,7 @@ typedef struct resources {
 // File systems tab in application
 typedef struct file_systems {
   GtkWidget *trv_devices; // Treeview
+  GtkListStore *lst_store_devices;
 } file_systems_tab_t;
 
 // Main application
@@ -43,6 +45,11 @@ typedef struct application {
 } application_t;
 
 application_t *init_application(int argc, char *argv[]);
+void load_application_widgets(application_t *);
+void configure_system_tab(application_t *);
+void configure_processes_tab(application_t *);
+void configure_resources_tab(application_t *);
+void configure_file_systems_tab(application_t *);
 void free_application(application_t *);
 
 #endif // GUI_H
