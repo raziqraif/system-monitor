@@ -34,7 +34,7 @@ system_info_t *get_sys_info() {
   system_info->process_version = strdup(process_version);
 
   //char disk_space[] = get_line_by_key(file_to_str("/proc/"), );
-  //system_info->disk_space = strdup(disk_space);
+  system_info->disk_space = malloc(10); // dummy malloc for free_sys_info
 
   free(version);
   version = NULL;
