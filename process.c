@@ -94,6 +94,11 @@ int parse_vm_int(char *line) {
   char *last_space = strrchr(line, ' ');
   last_space[0] = '\0';
   char *penultimate_space = strrchr(line, ' ');
+  if (penultimate_space == NULL) {
+    printf("ERROR: penultimate_space = NULL!\n");
+    printf("line = %s\n", line);
+    return -1;
+  }
   int val = atoi(penultimate_space);
   free(line);
   return val;
