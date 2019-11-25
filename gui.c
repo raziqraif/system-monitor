@@ -206,18 +206,23 @@ void update_processes_treeview(application_t *app) {
   
   GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
   GtkTreeIter iter;
-  /*  
+   
   proc_list_t *proc_list = get_processes();
   process_t **procs = proc_list->procs;
   for (int i = 0; i < proc_list->num_procs; i++) {
-  */
-  for (int i = 0; i < 5; i++) {
+    // TODO: Optimize with malloc/realloc
+    char cpu_str[10000];
+    char id_str[10000];
+    char memory_str[10000];
+    sprintf(cpu_str, "%.4f", procs[i]->cpu); 
+    sprintf(id_str, "%d", procs[i]->pid); 
+    sprintf(memory_str, "%.4f", procs[i]->mem); 
     gtk_tree_store_append(treestore, &iter, NULL);
-    gtk_tree_store_set(treestore, &iter, 0, "name", -1);
-    gtk_tree_store_set(treestore, &iter, 1, "status", -1);
-    gtk_tree_store_set(treestore, &iter, 2, "cpu", -1);
-    gtk_tree_store_set(treestore, &iter, 3, "id", -1);
-    gtk_tree_store_set(treestore, &iter, 4, "memory", -1);
+    gtk_tree_store_set(treestore, &iter, 0, procs[i]->name, -1);
+    gtk_tree_store_set(treestore, &iter, 1, procs[i]->status, -1);
+    gtk_tree_store_set(treestore, &iter, 2, cpu_str, -1);
+    gtk_tree_store_set(treestore, &iter, 3, id_str, -1);
+    gtk_tree_store_set(treestore, &iter, 4, memory_str, -1);
   }
 } /* update_processes_treeview() */
 
