@@ -15,8 +15,8 @@ typedef struct {
   char *owner;
   char *starttime;
   float cpu;         //cpu usage as a percent of clock ticks in a period
-  long utime;
-  long stime;
+  unsigned long utime;
+  unsigned long stime;
   int pid;
   int ppid;
   int uid;
@@ -25,6 +25,8 @@ typedef struct {
   int vmdata;
   int vmstk;
   int vmexe;
+  unsigned long vsize;
+  long rss;
   float mem;
   int update_flag;
 } process_t;

@@ -9,10 +9,12 @@
 
 #include "process.h"
 
-char STAT_FORMAT[] = "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu "
-  "%lu %lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %*lu %*ld %*lu %*lu %*lu "
-  "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu "
-  "%*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d";
+char STAT_FORMAT[] = "%d %*s %*c %d %*d %*d %*d %*d %*u %*lu "
+  "%*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %*ld %*ld "
+  "%*ld %llu %lu %ld %*lu %*lu %*lu %*lu %*lu %*lu "
+  "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u "
+  "%*u %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu "
+  "%*lu %*d";
 
 int g_btime = 0;
 int g_update_flag = 1;
@@ -120,6 +122,7 @@ int parse_vm_int(char *line) {
 
 /*
  * Mallocs a new process_t and fills its fields.
+ * Returns NULL if error or if pid is not a process.
  */
 
 process_t *get_process_info(int pid) {
@@ -136,49 +139,73 @@ process_t *get_process_info(int pid) {
     return NULL;
   }
 
-  char *tmp_stat = strdup(full_stat);
-  char *tok = strtok(tmp_stat, " ");
-  for (int i = 0; i < 21; i++) {
-    tok = strtok(NULL, " ");
+  sprintf(path, "/proc/%d/smaps", pid);
+  char *full_smaps = file_to_str(path);
+  if (full_smaps == NULL) {
+    return NULL;
   }
 
-  //printf("21st tok: %s\n", tok);
-  long long starttime_ticks = atoll(tok);
-  long long starttime_secs = starttime_ticks / sysconf(_SC_CLK_TCK);
-  time_t starttime = starttime_secs + g_btime;
-  char *starttime_str = strdup(ctime(&starttime));
-
-  char *ppid_line = get_line_by_key(full_status, "PPid:");
-  char *last_space = strrchr(ppid_line, '\t');
-  int ppid = atoi(last_space + 1);
-  free(ppid_line);
+  // char *ppid_line = get_line_by_key(full_status, "PPid:");
+  // char *last_space = strrchr(ppid_line, '\t');
+  // int ppid = atoi(last_space + 1);
+  // free(ppid_line);
 
   char *uid_line = get_line_by_key(full_status, "Uid:");
-  last_space = strrchr(uid_line, '\t');
+  char *last_space = strrchr(uid_line, '\t');
   int uid = atoi(last_space + 1);
   free(uid_line);
 
   process_t *new_proc = malloc(sizeof(process_t));
+  unsigned long long starttime_ticks = 0;
+
+  sscanf(full_stat, STAT_FORMAT, &(new_proc->pid), &(new_proc->ppid),
+          &(new_proc->utime), &(new_proc->stime),
+          &starttime_ticks, &(new_proc->vsize), &(new_proc->rss));
+
+  if (new_proc->rss == 0) {
+    //probably a thread, not a process
+    free(new_proc);
+    free(full_status);
+    free(full_stat);
+    free(full_smaps);
+    return NULL;
+  }
+  
+  unsigned long long starttime_secs = starttime_ticks / sysconf(_SC_CLK_TCK);
+  time_t starttime = starttime_secs + g_btime;
+  char *starttime_str = strdup(ctime(&starttime));
+
+  //int swap = parse_vm_int(get_line_by_key(full_smaps, "Swap:"));
+
   new_proc->name = get_val_from_line(get_line_by_key(full_status, "Name:"), '\t');
   new_proc->status = get_val_from_line(get_line_by_key(full_status, "State:"), '\t');
   new_proc->owner = get_uname(uid);
   new_proc->starttime = starttime_str;
   new_proc->cpu = 0;
-  new_proc->pid = pid;
-  new_proc->ppid = ppid;
+  // new_proc->pid = pid;
+  // new_proc->ppid = ppid;
   new_proc->uid = uid;
-  new_proc->vmsize = parse_vm_int(get_line_by_key(full_status, "VmSize:"));
-  new_proc->vmrss = parse_vm_int(get_line_by_key(full_status, "VmRSS:"));
-  new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
-  new_proc->vmstk = parse_vm_int(get_line_by_key(full_status, "VmStk:"));
-  new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
-  new_proc->mem = new_proc->vmdata + new_proc->vmstk + new_proc->vmexe;
+  // new_proc->vmsize = parse_vm_int(get_line_by_key(full_status, "VmSize:"));
+  // new_proc->vmrss = parse_vm_int(get_line_by_key(full_status, "VmRSS:"));
+  // new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
+  // new_proc->vmstk = parse_vm_int(get_line_by_key(full_status, "VmStk:"));
+  // new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
+  new_proc->mem = new_proc->rss;
   new_proc->update_flag = g_update_flag;
 
-  sscanf(full_stat, STAT_FORMAT, &(new_proc->utime), &(new_proc->stime));
+  // char *tmp_stat = strdup(full_stat);
+  // char *tok = strtok(tmp_stat, " ");
+  // for (int i = 0; i < 21; i++) {
+  //   tok = strtok(NULL, " ");
+  // }
+  //long long starttime_ticks = atoll(tok);
+  // unsigned long long starttime_secs = starttime_ticks / sysconf(_SC_CLK_TCK);
+  // time_t starttime = starttime_secs + g_btime;
+  // char *starttime_str = strdup(ctime(&starttime));
 
   free(full_status);
   free(full_stat);
+  free(full_smaps);
   return new_proc;
 } /* get_process_info() */
 
@@ -265,6 +292,9 @@ void print_proc(process_t *proc) {
  */
 
 void add_proc(proc_list_t *proc_list, process_t *new_proc) {
+  if (new_proc == NULL) {
+    return;
+  }
   if (proc_list->total_space == 0) {
     printf("proc_list is empty, initializing.");
     proc_list->procs = malloc(sizeof(process_t *) * MAX_PROCS);
@@ -367,7 +397,7 @@ void update_processes(proc_list_t *proc_list) {
                             - (old_utime + old_stime));
         long long total_clocks = (g_update_time - old_update_time) * sysconf(_SC_CLK_TCK);
         proc_list->procs[idx]->cpu = 100 * (float)used_clocks / (float)total_clocks;
-        printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
+        //printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
       }
     }
     ent = readdir(dir);
@@ -386,7 +416,40 @@ void update_processes(proc_list_t *proc_list) {
     }
   }
 
+  // printf("---------holes----------------\n");
+  // for (int i = 0; i < proc_list->num_procs; i++) {
+  //   if (proc_list->procs[i] == NULL) { printf("_"); }
+  //   else { printf("X"); }
+  // }
+  // printf("\n");
+
   //now batch remove the NULL holes
+  int holes = 0;
+  for (int i = 0; i + holes < proc_list->num_procs; i++) {
+    while(i + holes < proc_list->num_procs) {
+      if (proc_list->procs[i + holes] == NULL) {
+        holes++;
+      }
+      else {
+        break;
+      }
+    }
+    if (holes != 0) {
+      if (i + holes >= proc_list->num_procs) {
+        break;
+      }
+      proc_list->procs[i] = proc_list->procs[i + holes];
+    }
+  }
+  proc_list->num_procs = count;
+
+
+  // printf("---------no holes----------------\n");
+  // for (int i = 0; i < proc_list->num_procs; i++) {
+  //   if (proc_list->procs[i] == NULL) { printf("_"); }
+  //   else { printf("X"); }
+  // }
+  // printf("\n");
 
   printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
 } /* update_processes() */
