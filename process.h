@@ -14,7 +14,9 @@ typedef struct {
   char *status;
   char *owner;
   char *starttime;
-  int cpu;
+  float cpu;         //cpu usage as a percent of clock ticks in a period
+  unsigned long utime;
+  unsigned long stime;
   int pid;
   int ppid;
   int uid;
@@ -23,7 +25,10 @@ typedef struct {
   int vmdata;
   int vmstk;
   int vmexe;
+  unsigned long vsize;
+  long rss;
   float mem;
+  int update_flag;
 } process_t;
 
 typedef struct {
@@ -40,5 +45,6 @@ void free_process_t(process_t *proc);
 void print_proc(process_t *proc);
 void add_proc(proc_list_t *proc_list, process_t *new_proc);
 proc_list_t *get_processes();
+void update_processes(proc_list_t *proc_list);
 
 #endif // PROCESS_H
