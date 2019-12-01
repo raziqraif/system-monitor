@@ -70,6 +70,7 @@ typedef struct {
 char *file_to_str(char *filepath);
 char *get_uname(int uid);
 char *get_line_by_key(char *filebuffer, char *key);
+char *get_val_from_line(char *line, char delim);
 process_t *get_process_info(int pid);
 void free_process_t(process_t *proc);
 void print_proc(process_t *proc);
