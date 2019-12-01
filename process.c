@@ -9,12 +9,39 @@
 
 #include "process.h"
 
+#define SMAP_BUF_SIZE (128)
+#define LINES_PER_SMAP (21)
+
 char STAT_FORMAT[] = "%d %*s %*c %d %*d %*d %*d %*d %*u %*lu "
   "%*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %*ld %*ld "
   "%*ld %llu %lu %ld %*lu %*lu %*lu %*lu %*lu %*lu "
   "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u "
   "%*u %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu "
   "%*lu %*d";
+
+char SMAP_FORMAT[] = "%lx-%lx %s %lx %s %d ";
+
+char SMAP_FORMAT2[] = "%*s %d kB\n"
+  "KernelPageSize: %d kB\n"
+  "MMUPageSize: %d kB\n"
+  "Rss: %d kB\n"
+  "Pss: %d kB\n"
+  "Shared_Clean: %d kB\n"
+  "Shared_Dirty: %d kB\n"
+  "Private_Clean: %d kB\n"
+  "Private_Dirty: %d kB\n"
+  "Referenced: %d kB\n"
+  "Anonymous: %d kB\n"
+  "LazyFree: %d kB\n"
+  "AnonHugePages: %d kB\n"
+  "ShmemPmdMapped: %d kB\n"
+  "Shared_Hugetlb: %d kB\n"
+  "Private_Hugetlb: %d kB\n"
+  "Swap: %d kB\n"
+  "SwapPss: %d kB\n"
+  "Locked: %d kB\n"
+  "VmFlags: %[^\n]\n";
+
 
 int g_btime = 0;
 int g_update_flag = 1;
@@ -459,3 +486,151 @@ void update_processes(proc_list_t *proc_list) {
   printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
 } /* update_processes() */
 
+
+/*
+ * mallocs and fills a smap_t with info from a FILE *
+ * expected from /proc/[pid]/smaps
+ * This should probably only be used by get_smaps()
+ */
+smap_t *get_smap_info(int pid, FILE *fp){
+  if (fp == NULL) {
+    return NULL;
+  }
+  smap_t *new_smap = malloc(sizeof(smap_t));
+  new_smap->flags = malloc(sizeof(char) * SMAP_BUF_SIZE);
+  new_smap->dev = malloc(sizeof(char) * SMAP_BUF_SIZE);
+  new_smap->filename = malloc(sizeof(char) * SMAP_BUF_SIZE);
+  new_smap->vmflags = malloc(sizeof(char) * SMAP_BUF_SIZE);
+
+  int scanned = fscanf(fp, SMAP_FORMAT, 
+        &(new_smap->vmstart),
+        &(new_smap->vmend),
+        new_smap->flags,
+        &(new_smap->vmoffset),
+        new_smap->dev,
+        &(new_smap->inode)
+      );
+
+  fseek(fp, -1, SEEK_CUR);
+
+  if (fgetc(fp) == '\n') {
+    new_smap->filename = strdup("");
+  }
+  else {
+    fseek(fp, -1, SEEK_CUR);
+    fscanf(fp, "%[^\n]\n", new_smap->filename);
+  }
+  
+  int scanned2 = fscanf(fp, SMAP_FORMAT2,
+        &(new_smap->size),
+        &(new_smap->kernpagesize),
+        &(new_smap->mmupagesize),
+        &(new_smap->rss),
+        &(new_smap->pss),
+        &(new_smap->shared_clean),
+        &(new_smap->shared_dirty),
+        &(new_smap->private_clean),
+        &(new_smap->private_dirty),
+        &(new_smap->referenced),
+        &(new_smap->anonymous),
+        &(new_smap->lazyfree),
+        &(new_smap->anonhugepages),
+        &(new_smap->shmempmdmapped),
+        &(new_smap->shared_hugetlb),
+        &(new_smap->private_hugetlb),
+        &(new_smap->swap),
+        &(new_smap->swappss),
+        &(new_smap->locked),
+        new_smap->vmflags
+      );
+
+  printf("scanned: %d, pid: %d, filename: %s\n", scanned + scanned2, pid, new_smap->filename);
+
+  if (scanned + scanned2 < 26) {
+    printf("error in pid: %d\n", pid);
+    free(new_smap->flags);
+    free(new_smap->dev);
+    free(new_smap->filename);
+    free(new_smap->vmflags);
+    free(new_smap);
+    return NULL;
+  }
+  return new_smap;
+} /* get_smap_info() */
+
+
+/*
+ * frees the malloc'd fields of an smap_t
+ */
+void free_smap_t(smap_t *smap) {
+  free(smap->flags);
+  free(smap->dev);
+  free(smap->filename);
+  free(smap->vmflags);
+  smap->flags = NULL;
+  smap->dev = NULL;
+  smap->filename = NULL;
+  smap->vmflags = NULL;
+} /* free_smap_t() */
+
+
+/*
+ * Returns a pointer to an (smap_t *) that is the head of a null-terminated
+ * array of (smap_t *)
+ */
+smap_t **get_smaps(int pid) {
+  char path[128];
+  sprintf(path, "/proc/%d/smaps", pid);
+  FILE *fp = fopen(path, "r");
+  if (fp == NULL) {
+    printf("unable to open %s\n", path);
+    return NULL;
+  }
+  int num_lines = 0;
+  char c = getc(fp);
+  while(c != EOF) {
+    if (c == '\n') {
+      num_lines++;
+    }
+    c = getc(fp);
+  }
+  fseek(fp, 0, SEEK_SET);
+
+  int num_smaps = (num_lines / LINES_PER_SMAP) + 1;
+  smap_t **smaps = malloc(sizeof(smap_t *) * (num_smaps + 1));
+  smaps[num_smaps] = NULL;
+  for (int i = 0; i < num_smaps; i++) {
+    smaps[i] = get_smap_info(pid, fp);
+    if (smaps[i] == NULL) {
+      printf("unexpected NULL\n");
+    }
+  }
+  fclose(fp);
+  fp = NULL;
+  return smaps;
+} /* get_smaps() */
+
+
+/*
+ * frees each smap_t of smaps
+ */
+void free_smaps(smap_t **smaps) {
+  int i = 0;
+  while(smaps[i] != NULL) {
+    free_smap_t(smaps[i]);
+    smaps[i] = NULL;
+    i++;
+  }
+} /* free_smaps() */
+
+
+/*
+ * for testing
+ */
+void print_smaps(smap_t **smaps) {
+  int i = 0;
+  while(smaps[i] != NULL) {
+    printf("vmstart: %lx, filename: %s\n", smaps[i]->vmstart, smaps[i]->filename);
+    i++;
+  }
+} /* print_smaps() */
