@@ -12,8 +12,6 @@
 #include "callbacks.h"
 #include "process.h"
 
-#define MAIN_WINDOW_UI_FILE "./ui_files/main_window.glade"
-
 /*
  * Initialize application
  */
@@ -30,6 +28,7 @@ application_t *init_application(int argc, char *argv[]) {
   assert(app->resources_tab);
   app->file_systems_tab = malloc(sizeof(file_systems_tab_t));
   assert(app->file_systems_tab);
+  app->processes_list = get_processes();
 
   GtkBuilder *builder = gtk_builder_new_from_file(MAIN_WINDOW_UI_FILE);
 
@@ -205,9 +204,11 @@ void update_processes_treeview(application_t *app) {
   // TODO: Clear tree store first before appending processes 
   
   GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
+  clear_treeview(treestore, TREESTORE);
   GtkTreeIter iter;
-   
-  proc_list_t *proc_list = get_processes();
+  
+  update_processes(app->processes_list); 
+  proc_list_t *proc_list = app->processes_list;
   process_t **procs = proc_list->procs;
   for (int i = 0; i < proc_list->num_procs; i++) {
     // TODO: Optimize with malloc/realloc
@@ -227,14 +228,70 @@ void update_processes_treeview(application_t *app) {
 } /* update_processes_treeview() */
 
 /*
+ * Foreach function to be used  in clear_treeview().
+ * https://en.wikibooks.org/wiki/GTK%2B_By_Example/Tree_View/Tree_Models#Removing_Multiple_Rows
+ */
+
+gboolean foreach_func (GtkTreeModel *model,
+                      GtkTreePath  *path,
+                      GtkTreeIter  *iter,
+                      GList       **rowref_list) {
+    g_assert ( rowref_list != NULL );
+
+    GtkTreeRowReference  *rowref;
+    rowref = gtk_tree_row_reference_new(model, path);
+    *rowref_list = g_list_append(*rowref_list, rowref);
+
+    return FALSE; /* do not stop walking the store, call us with next row */
+} /* foreach_func() */
+
+/*
+ * Clear treeview.
+ * Arg type will be 0 when treestore is passed and 1 when liststore is passed.
+ *
+ * https://en.wikibooks.org/wiki/GTK%2B_By_Example/Tree_View/Tree_Models#Removing_Multiple_Rows
+ */
+
+void clear_treeview(void *store, int type) {
+  GList *rr_list = NULL;
+  GList *node;
+  gtk_tree_model_foreach(GTK_TREE_MODEL(store),
+                         (GtkTreeModelForeachFunc) foreach_func,
+                         &rr_list);
+  
+  for (node = rr_list; node != NULL; node = node->next) {
+    GtkTreePath *path;
+    path = gtk_tree_row_reference_get_path((GtkTreeRowReference *)node->data);
+
+    if (path) {
+      GtkTreeIter iter;
+       
+      if (gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, path)) {
+        if (type == TREESTORE) { 
+          gtk_tree_store_remove(store, &iter);
+        }
+        else if (type == LISTSTORE) {
+          gtk_list_store_remove(store, &iter);
+        }
+        else {
+          assert(True);
+        }
+      }
+    }
+  }
+  g_list_foreach(rr_list, (GFunc) gtk_tree_row_reference_free, NULL);
+  g_list_free(rr_list);
+} /* clear_treeview() */
+
+/*
  * Update the list in devices treeview
  */
 
 void update_devices_treeview(application_t *app) {
   assert(app);
-  // TODO: Clear list store first before appending processes 
-  
+ 
   GtkListStore *liststore = app->file_systems_tab->lst_store_devices;
+  clear_treeview(liststore, LISTSTORE);
   GtkTreeIter iter;
 
   // TODO: Get list of devices

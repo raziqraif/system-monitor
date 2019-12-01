@@ -3,6 +3,12 @@
 
 #include <gtk/gtk.h>
 
+#include "process.h"
+
+#define MAIN_WINDOW_UI_FILE "./ui_files/main_window.glade"
+#define TREESTORE (0)
+#define LISTSTORE (1)
+
 // System tab in application
 typedef struct system {
   GtkWidget *lbl_os;
@@ -41,6 +47,7 @@ typedef struct application {
   processes_tab_t *processes_tab;
   resources_tab_t *resources_tab;
   file_systems_tab_t *file_systems_tab;
+  proc_list_t *processes_list;
 } application_t;
 
 application_t *init_application(int argc, char *argv[]);
@@ -51,5 +58,7 @@ void configure_file_systems_tab(application_t *, GtkBuilder *);
 void free_application(application_t *);
 void update_processes_treeview(application_t *);
 void update_devices_treeview(application_t *);
+void clear_treeview(void *, int);
+gboolean foreach_func(GtkTreeModel *, GtkTreePath *, GtkTreeIter *, GList **);
 
 #endif // GUI_H
