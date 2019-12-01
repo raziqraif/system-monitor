@@ -292,6 +292,7 @@
                             <property name="resizable">True</property>
                             <property name="min_width">200</property>
                             <property name="title" translatable="yes">Process Name</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererText" id="rnd_process_name"/>
                             </child>
@@ -302,6 +303,7 @@
                             <property name="resizable">True</property>
                             <property name="min_width">90</property>
                             <property name="title" translatable="yes">Status</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererText" id="rnd_status"/>
                             </child>
@@ -312,6 +314,7 @@
                             <property name="resizable">True</property>
                             <property name="min_width">70</property>
                             <property name="title" translatable="yes">% CPU</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererText" id="rnd_cpu"/>
                             </child>
@@ -322,6 +325,7 @@
                             <property name="resizable">True</property>
                             <property name="min_width">90</property>
                             <property name="title" translatable="yes">ID</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererText" id="rnd_id"/>
                             </child>
@@ -331,6 +335,7 @@
                           <object class="GtkTreeViewColumn" id="col_memory">
                             <property name="resizable">True</property>
                             <property name="title" translatable="yes">Memory</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererText" id="rnd_memory"/>
                             </child>
@@ -411,6 +416,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">100</property>
                         <property name="title" translatable="yes">Device</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_device"/>
                         </child>
@@ -421,6 +427,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">100</property>
                         <property name="title" translatable="yes">Directory</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_directory"/>
                         </child>
@@ -431,6 +438,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">50</property>
                         <property name="title" translatable="yes">Type</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_type"/>
                         </child>
@@ -441,6 +449,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">80</property>
                         <property name="title" translatable="yes">Total</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_total"/>
                         </child>
@@ -451,6 +460,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">80</property>
                         <property name="title" translatable="yes">Free</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_free"/>
                         </child>
@@ -461,6 +471,7 @@
                         <property name="resizable">True</property>
                         <property name="min_width">80</property>
                         <property name="title" translatable="yes">Available</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_available"/>
                         </child>
@@ -470,6 +481,7 @@
                       <object class="GtkTreeViewColumn" id="col_used">
                         <property name="resizable">True</property>
                         <property name="title" translatable="yes">Used</property>
+                        <property name="clickable">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="rnd_used"/>
                         </child>
