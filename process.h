@@ -16,6 +16,7 @@ struct process_t {
   char *status;
   char *owner;
   char *starttime;
+  char *cputime;
   float cpu;         //cpu usage as a percent of clock ticks in a period
   unsigned long utime;
   unsigned long stime;

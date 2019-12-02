@@ -197,11 +197,16 @@ process_t *get_process_info(int pid) {
   time_t starttime = starttime_secs + g_btime;
   char *starttime_str = strdup(ctime(&starttime));
 
+  unsigned long long cputime_secs = (new_proc->utime + new_proc->stime) / sysconf(_SC_CLK_TCK);
+  char buf[512];
+  sprintf(buf, "%d:%d", (int)(cputime_secs / 60), (int)(cputime_secs % 60));
+
   new_proc->name = get_val_from_line(get_line_by_key(full_status, "Name:"), '\t');
   new_proc->status = get_val_from_line(get_line_by_key(full_status, "State:"), '\t');
   new_proc->owner = get_uname(uid);
   new_proc->uid = uid;
   new_proc->starttime = starttime_str;
+  new_proc->cputime = strdup(buf);
   new_proc->cpu = 0;
   new_proc->uid = uid;
   new_proc->mem = new_proc->rss + nswap;
@@ -209,6 +214,12 @@ process_t *get_process_info(int pid) {
 
   new_proc->children = malloc(sizeof(process_t *));
   new_proc->children[0] = NULL;
+
+  new_proc->vmsize = -1;
+  new_proc->vmrss = new_proc->rss;
+  new_proc->vmdata = -1;
+  new_proc->vmstk = -1;
+  new_proc->vmexe = -1;
 
   free(full_status);
   free(full_stat);
@@ -259,11 +270,13 @@ void free_process_t(process_t *proc) {
   free(proc->status);
   free(proc->owner);
   free(proc->starttime);
+  free(proc->cputime);
   free(proc->children);
   proc->name = NULL;
   proc->status = NULL;
   proc->owner = NULL;
   proc->starttime = NULL;
+  proc->cputime = NULL;
   proc->children = NULL;
 } /* free_process_t() */
 
@@ -392,6 +405,7 @@ void update_processes(proc_list_t *proc_list) {
   }
   time_t old_update_time = g_update_time;
   g_update_time = time(0);
+  //proc_list->t_interval = (g_update_time - old_update_time);
   struct dirent *ent = readdir(dir);
   while(ent != NULL) {
     int pid = atoi(ent->d_name);
