@@ -5,6 +5,8 @@
 
 #include "gui.h"
 
+#define DEBUG (1)
+
 extern int g_seconds_passed;
 
 bool timer_handler(application_t *);

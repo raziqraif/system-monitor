@@ -4,6 +4,9 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
 #include <math.h>
 #include <ctype.h>
 #include <assert.h>
@@ -11,6 +14,10 @@
 #include "sysinfo.h"
 #include "callbacks.h"
 #include "process.h"
+#include "main.h"
+
+int g_list_processes_mode = ALL_PROCESSES;
+bool g_list_processes_w_dependency = false;
 
 /*
  * Initialize application
@@ -44,11 +51,13 @@ application_t *init_application(int argc, char *argv[]) {
   configure_file_systems_tab(app, builder);
 
   g_signal_connect(app->appw_main, "destroy", G_CALLBACK(on_application_destroy), NULL);
-  gtk_builder_connect_signals(builder, NULL);
+  gtk_builder_connect_signals(builder, app);
+
+  g_object_unref(G_OBJECT(builder));
+
   update_processes_treeview(app); 
   update_devices_treeview(app); 
  
-  g_object_unref(G_OBJECT(builder));
   return app;
 } /* init_application() */
 
@@ -202,7 +211,6 @@ void free_application(application_t *app) {
 void update_processes_treeview(application_t *app) {
   assert(app); 
   // TODO: Clear tree store first before appending processes 
-  
   GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
   clear_treeview(treestore, TREESTORE);
   GtkTreeIter iter;
@@ -210,7 +218,18 @@ void update_processes_treeview(application_t *app) {
   update_processes(app->processes_list); 
   proc_list_t *proc_list = app->processes_list;
   process_t **procs = proc_list->procs;
+
   for (int i = 0; i < proc_list->num_procs; i++) {
+    
+    if ((g_list_processes_mode == MY_PROCESSES) && 
+        (procs[i]->uid != getuid())) {
+          continue;
+    }
+    else if ((g_list_processes_mode == ACTIVE_PROCESSES) && 
+             (procs[i]->status[0] == 'S')) {
+          continue;
+    }
+
     // TODO: Optimize with malloc/realloc
     char cpu_str[10000];
     char id_str[10000];
@@ -226,6 +245,39 @@ void update_processes_treeview(application_t *app) {
     gtk_tree_store_set(treestore, &iter, 4, memory_str, -1);
   }
 } /* update_processes_treeview() */
+
+/*
+ * Get selected process in processes treeview
+ */
+
+void get_selected_processes(application_t *app) {
+  GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
+  assert(treestore);
+} /* get_selected_processes() */
+
+/*
+ * Update the list in devices treeview
+ */
+
+void update_devices_treeview(application_t *app) {
+  assert(app);
+ 
+  GtkListStore *liststore = app->file_systems_tab->lst_store_devices;
+  clear_treeview(liststore, LISTSTORE);
+  GtkTreeIter iter;
+
+  // TODO: Get list of devices
+  for (int i = 0; i < 5; i++) {
+    gtk_list_store_append(liststore, &iter);
+    gtk_list_store_set(liststore, &iter, 0, "device", -1);
+    gtk_list_store_set(liststore, &iter, 1, "directory", -1);
+    gtk_list_store_set(liststore, &iter, 2, "type", -1);
+    gtk_list_store_set(liststore, &iter, 3, "total", -1);
+    gtk_list_store_set(liststore, &iter, 4, "free", -1);
+    gtk_list_store_set(liststore, &iter, 5, "available", -1);
+    gtk_list_store_set(liststore, &iter, 6, "used", -1);
+  }
+} /* update_devices_treeview() */
 
 /*
  * Foreach function to be used  in clear_treeview().
@@ -282,27 +334,3 @@ void clear_treeview(void *store, int type) {
   g_list_foreach(rr_list, (GFunc) gtk_tree_row_reference_free, NULL);
   g_list_free(rr_list);
 } /* clear_treeview() */
-
-/*
- * Update the list in devices treeview
- */
-
-void update_devices_treeview(application_t *app) {
-  assert(app);
- 
-  GtkListStore *liststore = app->file_systems_tab->lst_store_devices;
-  clear_treeview(liststore, LISTSTORE);
-  GtkTreeIter iter;
-
-  // TODO: Get list of devices
-  for (int i = 0; i < 5; i++) {
-    gtk_list_store_append(liststore, &iter);
-    gtk_list_store_set(liststore, &iter, 0, "device", -1);
-    gtk_list_store_set(liststore, &iter, 1, "directory", -1);
-    gtk_list_store_set(liststore, &iter, 2, "type", -1);
-    gtk_list_store_set(liststore, &iter, 3, "total", -1);
-    gtk_list_store_set(liststore, &iter, 4, "free", -1);
-    gtk_list_store_set(liststore, &iter, 5, "available", -1);
-    gtk_list_store_set(liststore, &iter, 6, "used", -1);
-  }
-} /* update_devices_treeview() */
