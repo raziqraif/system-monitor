@@ -171,6 +171,12 @@ process_t *get_process_info(int pid) {
     return NULL;
   }
 
+  sprintf(path, "/proc/%d/statm", pid);
+  FILE *statm_fp = fopen(path, "r");
+  if (statm_fp == NULL) {
+    return NULL;
+  }
+
   char *uid_line = get_line_by_key(full_status, "Uid:");
   char *last_space = strrchr(uid_line, '\t');
   int uid = atoi(last_space + 1);
@@ -178,6 +184,8 @@ process_t *get_process_info(int pid) {
 
   process_t *new_proc = malloc(sizeof(process_t));
   unsigned long long starttime_ticks = 0;
+
+  fscanf(statm_fp, "%*d %*d %d %*[^\n]\n", &(new_proc->shared));
 
   int nswap = 0;
 
@@ -223,6 +231,7 @@ process_t *get_process_info(int pid) {
 
   free(full_status);
   free(full_stat);
+  fclose(statm_fp);
   return new_proc;
 } /* get_process_info() */
 

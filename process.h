@@ -30,6 +30,7 @@ struct process_t {
   int vmexe;
   unsigned long vsize;
   long rss;
+  int shared;
   float mem;
   int update_flag;
   process_t **children;
