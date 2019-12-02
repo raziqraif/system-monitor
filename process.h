@@ -39,6 +39,7 @@ typedef struct {
   process_t **procs;
   int num_procs;
   int total_space;
+  char *load_avg;
 } proc_list_t;
 
 typedef struct {

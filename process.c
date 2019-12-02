@@ -286,6 +286,8 @@ void free_process_t(process_t *proc) {
  */
 
 void free_proc_list_t(proc_list_t *list) {
+  free(list->load_avg);
+  list->load_avg = NULL;
   for (int i = 0; i < list->num_procs; i++) {
     free_process_t(list->procs[i]);
     free(list->procs[i]);
@@ -372,6 +374,11 @@ proc_list_t *get_processes() {
   proc_list->procs = NULL;
   proc_list->num_procs = 0;
   proc_list->total_space = 0;
+  proc_list->load_avg = file_to_str("/proc/loadavg");
+  char *last_space = strrchr(proc_list->load_avg, ' ');
+  last_space[0] = '\0';
+  char *penultimate_space = strrchr(proc_list->load_avg, ' ');
+  penultimate_space[0] = '\0';
 
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
@@ -396,8 +403,15 @@ proc_list_t *get_processes() {
  * Update a proc_list_t. If a process no longer exists, it is freed and NULLed.
  */
 void update_processes(proc_list_t *proc_list) {
-  //printf("--------------------------updating processes\n");
   g_update_flag++;
+
+  free(proc_list->load_avg);
+  proc_list->load_avg = file_to_str("/proc/loadavg");
+  char *last_space = strrchr(proc_list->load_avg, ' ');
+  last_space[0] = '\0';
+  char *penultimate_space = strrchr(proc_list->load_avg, ' ');
+  penultimate_space[0] = '\0';
+
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
     printf("Could not open dir: %s\n", "/proc/");
