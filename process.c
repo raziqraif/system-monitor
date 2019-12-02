@@ -207,6 +207,7 @@ process_t *get_process_info(int pid) {
   new_proc->name = get_val_from_line(get_line_by_key(full_status, "Name:"), '\t');
   new_proc->status = get_val_from_line(get_line_by_key(full_status, "State:"), '\t');
   new_proc->owner = get_uname(uid);
+  new_proc->uid = uid;
   new_proc->starttime = starttime_str;
   new_proc->cpu = 0;
   // new_proc->pid = pid;

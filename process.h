@@ -13,6 +13,7 @@ typedef struct {
   char *name;
   char *status;
   char *owner;
+  int uid;
   char *starttime;
   float cpu;         //cpu usage as a percent of clock ticks in a period
   unsigned long utime;
