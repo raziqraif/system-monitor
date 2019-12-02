@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <malloc.h>
+#include <sys/statvfs.h>
 
 #include "process.h"
 
@@ -25,25 +26,46 @@ system_info_t *get_sys_info() {
   version[i] = '\0';
   system_info->kernel_version = strdup(version);
 
-  char *memory = get_line_by_key(file_to_str("/proc/meminfo"),
-                                 "MemTotal");
-  system_info->memory = strdup(memory);
+  FILE *meminfo_fp = fopen("/proc/meminfo", "r");
+  if (meminfo_fp == NULL) {
+    printf("fopen error on %s", "/proc/meminfo");
+    return NULL;
+  }
+  unsigned long memtotal = 0;
+  fscanf(meminfo_fp, "MemTotal: %lu%*[^\n]\n", &memtotal);
+  fclose(meminfo_fp);
+
+  float memtotal_GiB = memtotal / (1024*1024);
+
+  system_info->memory = malloc(sizeof(char) * 512);
+  sprintf(system_info->memory, "%.1f GB", memtotal_GiB);
 
   char *process_version = get_line_by_key(file_to_str("/proc/cpuinfo"),
                                           "model name");
-  system_info->process_version = strdup(process_version);
+  char *trimmed_version = strchr(process_version, ':');
+  if (trimmed_version != NULL) {
+    system_info->process_version = strdup(trimmed_version + 2);
+  }
+  else {
+    system_info->process_version = strdup(process_version);
+  }
 
-  //char disk_space[] = get_line_by_key(file_to_str("/proc/"), );
-  system_info->disk_space = malloc(10); // dummy malloc for free_sys_info
+  float available_space = 0;
+  struct statvfs stats = { 0 };
+  int check = statvfs("/", &stats);
+  if (check < 0) {
+    printf("error in statvfs!\n");
+  }
+  else {
+    available_space = (stats.f_bsize / 1024.0) * (stats.f_bavail / (1024.0 * 1024.0)) ;
+  }
+  system_info->disk_space = malloc(128);
+  sprintf(system_info->disk_space, "%.1f GiB", available_space);
 
   free(version);
   version = NULL;
-  free(memory);
-  memory = NULL;
   free(process_version);
   process_version = NULL;
-  //free(disk_space);
-  //disk_space = NULL;
 
   return system_info;
 } /* get_sys_info() */

@@ -207,6 +207,9 @@ process_t *get_process_info(int pid) {
   new_proc->mem = new_proc->rss + nswap;
   new_proc->update_flag = g_update_flag;
 
+  new_proc->children = malloc(sizeof(process_t *));
+  new_proc->children[0] = NULL;
+
   free(full_status);
   free(full_stat);
   return new_proc;
@@ -256,10 +259,12 @@ void free_process_t(process_t *proc) {
   free(proc->status);
   free(proc->owner);
   free(proc->starttime);
+  free(proc->children);
   proc->name = NULL;
   proc->status = NULL;
   proc->owner = NULL;
   proc->starttime = NULL;
+  proc->children = NULL;
 } /* free_process_t() */
 
 
@@ -508,7 +513,7 @@ smap_t *get_smap_info(int pid, FILE *fp){
         new_smap->vmflags
       );
 
-  printf("scanned: %d, pid: %d, filename: %s\n", scanned + scanned2, pid, new_smap->filename);
+  //printf("scanned: %d, pid: %d, filename: %s\n", scanned + scanned2, pid, new_smap->filename);
 
   if (scanned + scanned2 < 26) {
     printf("error in pid: %d\n", pid);
@@ -566,7 +571,7 @@ smap_t **get_smaps(int pid) {
   for (int i = 0; i < num_smaps; i++) {
     smaps[i] = get_smap_info(pid, fp);
     if (smaps[i] == NULL) {
-      printf("unexpected NULL\n");
+      //printf("unexpected NULL\n");
     }
   }
   fclose(fp);
@@ -598,3 +603,44 @@ void print_smaps(smap_t **smaps) {
     i++;
   }
 } /* print_smaps() */
+
+
+/*
+ * adds a child to a process_t.
+ */
+void add_child(process_t *proc, process_t *child) {
+  int count = 0;
+  while (proc->children[count] != NULL) {
+    count++;
+  }
+  proc->children = realloc(proc->children, sizeof(process_t *) * (count + 2));
+  proc->children[count] = child;
+  proc->children[count + 1] = NULL;
+} /* add_child() */
+
+
+/*
+ * Populates the children field of each process.
+ */
+void calc_proc_tree(proc_list_t *proc_list) {
+  for (int i = 0; i < proc_list->num_procs; i++) {
+    for (int j = 0; j < proc_list->num_procs; j++) {
+      if (proc_list->procs[j]->ppid == proc_list->procs[i]->pid) {
+        add_child(proc_list->procs[i], proc_list->procs[j]);
+      }
+    }
+  }
+} /* calc_proc_tree() */
+
+
+void print_children(process_t *proc, int depth) {
+  for (int j = 0; j < depth; j++) {
+    printf("-");
+  }
+  print_proc(proc);
+  int i = 0;
+  while(proc->children[i] != NULL) {
+    print_children(proc->children[i], depth + 1);
+    i++;
+  }
+}
