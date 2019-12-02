@@ -103,6 +103,8 @@ usage_t *get_usage() {
   stat_fp = NULL;
   fclose(meminfo_fp);
   meminfo_fp = NULL;
+  fclose(net_dev_fp);
+  net_dev_fp = NULL;
 
   return usage;
 } /* get_usage() */
