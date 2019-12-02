@@ -222,6 +222,7 @@ void update_processes_treeview(application_t *app) {
   update_processes(app->processes_list); 
   proc_list_t *proc_list = app->processes_list;
   process_t **procs = proc_list->procs;
+  calc_proc_tree(proc_list);
 
   for (int i = 0; i < proc_list->num_procs; i++) {
     
@@ -232,6 +233,9 @@ void update_processes_treeview(application_t *app) {
     else if ((g_list_processes_mode == ACTIVE_PROCESSES) && 
              (procs[i]->status[0] == 'S')) {
           continue;
+    }
+    if (g_list_processes_w_dependency && (procs[i]->ppid != 0)) {
+      continue;
     }
 
     // TODO: Optimize with malloc/realloc
@@ -247,8 +251,43 @@ void update_processes_treeview(application_t *app) {
     gtk_tree_store_set(treestore, &iter, 2, cpu_str, -1);
     gtk_tree_store_set(treestore, &iter, 3, id_str, -1);
     gtk_tree_store_set(treestore, &iter, 4, memory_str, -1);
+ 
+    if (g_list_processes_w_dependency) {
+      insert_child_processes(procs[i], treestore, &iter);
+    }
   }
 } /* update_processes_treeview() */
+
+/*
+ * Insert children processes into treeview.
+ */
+
+void insert_child_processes(process_t *process, GtkTreeStore *treestore,
+    GtkTreeIter *p_iter_ptr) {
+
+    GtkTreeIter iter;
+    // TODO: Optimize with malloc/realloc
+    int id = 0;
+    while (process->children[id]) {
+      process_t *child = process->children[id];
+      char cpu_str[10000];
+      char id_str[10000];
+      char memory_str[10000];
+      sprintf(cpu_str, "%.4f", child->cpu); 
+      sprintf(id_str, "%d", child->pid); 
+      sprintf(memory_str, "%.4f", child->mem); 
+      gtk_tree_store_append(treestore, &iter, p_iter_ptr);
+      gtk_tree_store_set(treestore, &iter, 0, child->name, -1);
+      gtk_tree_store_set(treestore, &iter, 1, child->status, -1);
+      gtk_tree_store_set(treestore, &iter, 2, cpu_str, -1);
+      gtk_tree_store_set(treestore, &iter, 3, id_str, -1);
+      gtk_tree_store_set(treestore, &iter, 4, memory_str, -1);
+      
+      insert_child_processes(child, treestore, &iter);
+      id++;
+    }
+
+} /* insert_children_process() */
 
 /*
  * Get selected process in processes treeview

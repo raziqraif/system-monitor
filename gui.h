@@ -71,6 +71,7 @@ void configure_resources_tab(application_t *, GtkBuilder *);
 void configure_file_systems_tab(application_t *, GtkBuilder *);
 void free_application(application_t *);
 void update_processes_treeview(application_t *);
+void insert_child_processes(process_t *, GtkTreeStore *, GtkTreeIter *);
 process_t *get_selected_process(application_t *);
 void update_devices_treeview(application_t *);
 void clear_treeview(void *, int);
