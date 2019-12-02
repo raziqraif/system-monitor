@@ -416,10 +416,19 @@ void update_processes(proc_list_t *proc_list) {
 
   free(proc_list->load_avg);
   proc_list->load_avg = file_to_str("/proc/loadavg");
-  char *last_space = strrchr(proc_list->load_avg, ' ');
-  last_space[0] = '\0';
-  char *penultimate_space = strrchr(proc_list->load_avg, ' ');
-  penultimate_space[0] = '\0';
+  if (proc_list->load_avg != NULL) {
+    char *last_space = strrchr(proc_list->load_avg, ' ');
+    if (last_space) {
+      last_space[0] = '\0';
+    }
+    char *penultimate_space = strrchr(proc_list->load_avg, ' ');
+    if (penultimate_space) {
+      penultimate_space[0] = '\0';
+    }
+  }
+  else {
+    proc_list->load_avg = strdup("unknown");
+  }
 
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
@@ -428,7 +437,6 @@ void update_processes(proc_list_t *proc_list) {
   }
   time_t old_update_time = g_update_time;
   g_update_time = time(0);
-  //proc_list->t_interval = (g_update_time - old_update_time);
   struct dirent *ent = readdir(dir);
   while(ent != NULL) {
     int pid = atoi(ent->d_name);
@@ -661,7 +669,6 @@ void add_child(process_t *proc, process_t *child) {
  */
 void calc_proc_tree(proc_list_t *proc_list) {
   for (int i = 0; i < proc_list->num_procs; i++) {
-    free(proc_list->procs[i]->children);
     proc_list->procs[i]->children[0] = NULL;
     for (int j = 0; j < proc_list->num_procs; j++) {
       if (proc_list->procs[j]->ppid == proc_list->procs[i]->pid) {
