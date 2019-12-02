@@ -1,0 +1,27 @@
+#ifndef USAGE_H
+#define USAGE_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/types.h>
+
+#define MAX_PROCS (1024)
+
+typedef struct {
+  unsigned long user;
+  unsigned long system;
+  unsigned long idle;
+  unsigned long memtotal;
+  unsigned long memavailable;
+  unsigned long swaptotal;
+  unsigned long swapfree;
+  unsigned long net_rec_total;
+  unsigned long net_sent_total;
+} usage_t;
+
+usage_t *get_usage();
+void print_usage(usage_t *usage);
+
+#endif // USAGE_H

@@ -15,7 +15,7 @@
 char STAT_FORMAT[] = "%d %*s %*c %d %*d %*d %*d %*d %*u %*lu "
   "%*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %*ld %*ld "
   "%*ld %llu %lu %ld %*lu %*lu %*lu %*lu %*lu %*lu "
-  "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u "
+  "%*lu %*lu %*lu %*lu %*lu %lu %*lu %*d %*d %*u "
   "%*u %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu "
   "%*lu %*d";
 
@@ -171,12 +171,6 @@ process_t *get_process_info(int pid) {
     return NULL;
   }
 
-  /*sprintf(path, "/proc/%d/smaps", pid);
-  char *full_smaps = file_to_str(path);
-  if (full_smaps == NULL) {
-    return NULL;
-  }*/
-
   char *uid_line = get_line_by_key(full_status, "Uid:");
   char *last_space = strrchr(uid_line, '\t');
   int uid = atoi(last_space + 1);
@@ -185,16 +179,17 @@ process_t *get_process_info(int pid) {
   process_t *new_proc = malloc(sizeof(process_t));
   unsigned long long starttime_ticks = 0;
 
+  int nswap = 0;
+
   sscanf(full_stat, STAT_FORMAT, &(new_proc->pid), &(new_proc->ppid),
           &(new_proc->utime), &(new_proc->stime),
-          &starttime_ticks, &(new_proc->vsize), &(new_proc->rss));
+          &starttime_ticks, &(new_proc->vsize), &(new_proc->rss), &nswap);
 
   if (new_proc->rss == 0) {
     //probably a thread, not a process
     free(new_proc);
     free(full_status);
     free(full_stat);
-    //free(full_smaps);
     return NULL;
   }
   
@@ -202,38 +197,18 @@ process_t *get_process_info(int pid) {
   time_t starttime = starttime_secs + g_btime;
   char *starttime_str = strdup(ctime(&starttime));
 
-  //int swap = parse_vm_int(get_line_by_key(full_smaps, "Swap:"));
-
   new_proc->name = get_val_from_line(get_line_by_key(full_status, "Name:"), '\t');
   new_proc->status = get_val_from_line(get_line_by_key(full_status, "State:"), '\t');
   new_proc->owner = get_uname(uid);
   new_proc->uid = uid;
   new_proc->starttime = starttime_str;
   new_proc->cpu = 0;
-  // new_proc->pid = pid;
-  // new_proc->ppid = ppid;
   new_proc->uid = uid;
-  // new_proc->vmsize = parse_vm_int(get_line_by_key(full_status, "VmSize:"));
-  // new_proc->vmrss = parse_vm_int(get_line_by_key(full_status, "VmRSS:"));
-  // new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
-  // new_proc->vmstk = parse_vm_int(get_line_by_key(full_status, "VmStk:"));
-  // new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
-  new_proc->mem = new_proc->rss;
+  new_proc->mem = new_proc->rss + nswap;
   new_proc->update_flag = g_update_flag;
-
-  // char *tmp_stat = strdup(full_stat);
-  // char *tok = strtok(tmp_stat, " ");
-  // for (int i = 0; i < 21; i++) {
-  //   tok = strtok(NULL, " ");
-  // }
-  //long long starttime_ticks = atoll(tok);
-  // unsigned long long starttime_secs = starttime_ticks / sysconf(_SC_CLK_TCK);
-  // time_t starttime = starttime_secs + g_btime;
-  // char *starttime_str = strdup(ctime(&starttime));
 
   free(full_status);
   free(full_stat);
-  //free(full_smaps);
   return new_proc;
 } /* get_process_info() */
 
