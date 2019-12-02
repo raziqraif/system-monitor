@@ -71,10 +71,14 @@ system_info_t *get_sys_info() {
 } /* get_sys_info() */
 
 /*
- * Returns 0 on success, returns 1 on failure
+ * Frees system_info_t variables that are malloc'd in get_sys_info()
  */
 
 void free_sys_info(system_info_t *system_info) {
+  if (system_info == NULL) {
+    return;
+  }
+
   free(system_info->kernel_version);
   free(system_info->memory);
   free(system_info->process_version);
