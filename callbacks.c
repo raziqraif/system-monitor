@@ -71,8 +71,8 @@ void on_mnu_stop_process_activate(GtkWidget *widget, application_t *app) {
     return;
   }
   
-  // TODO: Stop the process 
-  printf("Stop process\n");
+  kill(proc->pid, SIGSTOP);
+  printf("sent SIGSTOP to %d\n", proc->pid);
   
   update_processes_treeview(app);
 } /* on_mnu_stop_process_activate() */
@@ -88,8 +88,8 @@ void on_mnu_continue_process_activate(GtkWidget *widget, application_t *app) {
     return;
   }
   
-  // TODO: Continue the process 
-  printf("Continue process\n");
+  kill(proc->pid, SIGCONT);
+  printf("sent SIGCONT to %d\n", proc->pid);
 
   update_processes_treeview(app);
 } /* on_mnu_continue_process_activate() */
