@@ -84,7 +84,8 @@ void configure_system_tab(application_t *app, GtkBuilder *builder) {
     sys_info->memory);
   gtk_label_set_text(GTK_LABEL(sys_tab->lbl_processor),
     sys_info->process_version);
-  // TODO: Update available disk memory
+  gtk_label_set_text(GTK_LABEL(sys_tab->lbl_available_disk_space),
+    sys_info->disk_space);
   // TODO: Display os name too(?)
 
   free_sys_info(sys_info);
