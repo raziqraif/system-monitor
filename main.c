@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
   gtk_init(&argc, &argv);
   application_t *app = init_application(argc, argv);
-  gtk_widget_show(app->appw_main);
+  gtk_widget_show_all(app->appw_main);
 
   // https://www.youtube.com/watch?v=ejOFZEe7K68 
   g_timeout_add_seconds(1, (GSourceFunc) timer_handler, app);
@@ -43,7 +43,12 @@ int main(int argc, char *argv[]) {
 
 bool timer_handler(application_t *app) {
   g_seconds_passed++;
-  printf("%d seconds have passed.\n", g_seconds_passed);
-  update_processes_treeview(app);
+  // printf("%d seconds have passed.\n", g_seconds_passed);
+  if (g_seconds_passed == 1) {
+    update_processes_treeview(app);
+  }
+  if (g_seconds_passed % 1 == 0) {
+      //update_processes_treeview(app);
+  }
   return true;   
 } /* timer_handler() */
