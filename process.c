@@ -633,6 +633,10 @@ void calc_proc_tree(proc_list_t *proc_list) {
 } /* calc_proc_tree() */
 
 
+
+/*
+ * recursively print children of a process_t
+ */
 void print_children(process_t *proc, int depth) {
   for (int j = 0; j < depth; j++) {
     printf("-");
@@ -643,4 +647,4 @@ void print_children(process_t *proc, int depth) {
     print_children(proc->children[i], depth + 1);
     i++;
   }
-}
+} /* print_children() */
