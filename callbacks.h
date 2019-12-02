@@ -16,5 +16,6 @@ void on_mnu_all_processes_toggled(GtkWidget *, application_t *);
 void on_mnu_active_processes_toggled(GtkWidget *, application_t *);
 void on_mnu_my_processes_toggled(GtkWidget *, application_t *);
 void on_mnu_dependencies_toggled(GtkWidget *, application_t *);
+void show_error_message(GtkWidget *, const char *);
 
 #endif //CALLBACKS_H

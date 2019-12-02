@@ -116,6 +116,9 @@ void configure_processes_tab(application_t *app, GtkBuilder *builder) {
   proc_tab->tree_store_processes = GTK_TREE_STORE(
     gtk_builder_get_object(builder, "tree_store_processes"));
   assert(proc_tab->tree_store_processes);
+  proc_tab->sel_processes = GTK_TREE_SELECTION(
+    gtk_builder_get_object(builder, "sel_processes"));
+  assert(proc_tab->sel_processes);
   proc_tab->btn_end_process = GTK_WIDGET(
     gtk_builder_get_object(builder, "btn_end_process"));
   assert(proc_tab->btn_end_process);
@@ -248,11 +251,32 @@ void update_processes_treeview(application_t *app) {
 
 /*
  * Get selected process in processes treeview
+ *
+ * http://zetcode.com/gui/gtk2/gtktreeview/
  */
 
-void get_selected_processes(application_t *app) {
-  GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
-  assert(treestore);
+process_t *get_selected_process(application_t *app) {
+  GtkTreeModel *treestore = GTK_TREE_MODEL(app->processes_tab->tree_store_processes);
+  GtkTreeSelection *selection = app->processes_tab->sel_processes;
+  GtkTreeIter iter;
+  gchar *value = NULL;
+  const int PID_COLUMN = 3;
+ 
+  if (gtk_tree_selection_get_selected(selection, &treestore, &iter)) {
+    gtk_tree_model_get(treestore, &iter, PID_COLUMN, &value, -1);
+    assert(value);
+    int id = atoi(value);    
+    proc_list_t *proc_list = app->processes_list;
+    process_t **procs = proc_list->procs;
+    for (int i = 0; i < proc_list->num_procs; i++) {
+      if (procs[i]->pid == id) {
+        g_free(value);         
+        return procs[i]; 
+      }
+    }
+    g_free(value); 
+  }
+  return NULL;
 } /* get_selected_processes() */
 
 /*

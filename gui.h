@@ -31,6 +31,7 @@ typedef struct processes {
   GtkWidget *lbl_description;
   GtkTreeView *trv_processes; // Treeview
   GtkTreeStore *tree_store_processes;
+  GtkTreeSelection *sel_processes;
   GtkWidget *btn_end_process;
 } processes_tab_t;
 
@@ -70,7 +71,7 @@ void configure_resources_tab(application_t *, GtkBuilder *);
 void configure_file_systems_tab(application_t *, GtkBuilder *);
 void free_application(application_t *);
 void update_processes_treeview(application_t *);
-void get_selected_process(application_t *);
+process_t *get_selected_process(application_t *);
 void update_devices_treeview(application_t *);
 void clear_treeview(void *, int);
 gboolean foreach_func(GtkTreeModel *, GtkTreePath *, GtkTreeIter *, GList **);

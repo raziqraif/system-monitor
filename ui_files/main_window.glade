@@ -285,7 +285,7 @@
                         <property name="model">tree_store_processes</property>
                         <property name="search_column">0</property>
                         <child internal-child="selection">
-                          <object class="GtkTreeSelection" id="selection_device"/>
+                          <object class="GtkTreeSelection" id="sel_processes"/>
                         </child>
                         <child>
                           <object class="GtkTreeViewColumn" id="col_process_name">
@@ -312,6 +312,7 @@
                         <child>
                           <object class="GtkTreeViewColumn" id="col_cpu">
                             <property name="resizable">True</property>
+                            <property name="sizing">fixed</property>
                             <property name="min_width">70</property>
                             <property name="title" translatable="yes">% CPU</property>
                             <property name="clickable">True</property>
@@ -409,7 +410,7 @@
                     <property name="model">lst_store_devices</property>
                     <property name="search_column">0</property>
                     <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="selection_devices"/>
+                      <object class="GtkTreeSelection" id="sel_devices"/>
                     </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="col_device">
