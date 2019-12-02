@@ -9,7 +9,9 @@
 
 #define MAX_PROCS (1024)
 
-typedef struct {
+typedef struct process_t process_t;
+
+struct process_t {
   char *name;
   char *status;
   char *owner;
@@ -29,7 +31,8 @@ typedef struct {
   long rss;
   float mem;
   int update_flag;
-} process_t;
+  process_t **children;
+};
 
 typedef struct {
   process_t **procs;
@@ -82,5 +85,7 @@ void free_smap_t(smap_t *smap);
 smap_t **get_smaps(int pid);
 void free_smaps(smap_t **smaps);
 void print_smaps(smap_t **smaps);
+void calc_proc_tree(proc_list_t *proc_list);
+void print_children(process_t *proc, int depth);
 
 #endif // PROCESS_H
