@@ -55,7 +55,7 @@ time_t g_update_time = 0;
 char *file_to_str(char *filepath) {
   FILE *fp = fopen(filepath, "r");
   if (fp == NULL) {
-    printf("fopen failed for: %s\n", filepath);
+    //printf("fopen failed for: %s\n", filepath);
     return NULL;
   }
   int file_size = 0;
@@ -171,16 +171,11 @@ process_t *get_process_info(int pid) {
     return NULL;
   }
 
-  sprintf(path, "/proc/%d/smaps", pid);
+  /*sprintf(path, "/proc/%d/smaps", pid);
   char *full_smaps = file_to_str(path);
   if (full_smaps == NULL) {
     return NULL;
-  }
-
-  // char *ppid_line = get_line_by_key(full_status, "PPid:");
-  // char *last_space = strrchr(ppid_line, '\t');
-  // int ppid = atoi(last_space + 1);
-  // free(ppid_line);
+  }*/
 
   char *uid_line = get_line_by_key(full_status, "Uid:");
   char *last_space = strrchr(uid_line, '\t');
@@ -199,7 +194,7 @@ process_t *get_process_info(int pid) {
     free(new_proc);
     free(full_status);
     free(full_stat);
-    free(full_smaps);
+    //free(full_smaps);
     return NULL;
   }
   
@@ -237,7 +232,7 @@ process_t *get_process_info(int pid) {
 
   free(full_status);
   free(full_stat);
-  free(full_smaps);
+  //free(full_smaps);
   return new_proc;
 } /* get_process_info() */
 
@@ -252,9 +247,11 @@ int find_proc(int pid, proc_list_t *proc_list) {
   int end = proc_list->num_procs;
   while (1) {
     if (proc_list->procs[check]->pid == pid) {
+      //printf("found %d at %d\n", pid, check);
       return check;
     }
     if (start == end) {
+      //printf("start == end\n");
       return -1;
     }
     if (proc_list->procs[check]->pid > pid) {
@@ -311,10 +308,12 @@ void print_proc(process_t *proc) {
     printf("XXXXXXXXXXXXXXXXXXXXX\n");
     return;
   }
-  printf("======Name: %s\nStatus: %s\nOwner: %s\nCPU: %f\nID: %d\nMem: %f\n"
+  /*printf("======Name: %s\nStatus: %s\nOwner: %s\nCPU: %f\nID: %d\nMem: %f\n"
          "Starttime: %s\n",
         proc->name, proc->status, proc->owner, proc->cpu, proc->pid, proc->mem,
-        proc->starttime);
+        proc->starttime);*/
+
+  printf("%d %s\n", proc->pid, proc->name);
 } /* print_proc() */
 
 
@@ -325,10 +324,11 @@ void print_proc(process_t *proc) {
 
 void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   if (new_proc == NULL) {
+    //printf("add_proc() was given a NULL proc\n");
     return;
   }
   if (proc_list->total_space == 0) {
-    printf("proc_list is empty, initializing.");
+    printf("proc_list is empty, initializing.\n");
     proc_list->procs = malloc(sizeof(process_t *) * MAX_PROCS);
     proc_list->procs[0] = new_proc;
     proc_list->num_procs = 1;
@@ -402,7 +402,7 @@ proc_list_t *get_processes() {
  * Update a proc_list_t. If a process no longer exists, it is freed and NULLed.
  */
 void update_processes(proc_list_t *proc_list) {
-  printf("--------------------------updating processes\n");
+  //printf("--------------------------updating processes\n");
   g_update_flag++;
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
@@ -415,21 +415,26 @@ void update_processes(proc_list_t *proc_list) {
   while(ent != NULL) {
     int pid = atoi(ent->d_name);
     if (pid != 0) {
-      int idx = find_proc(pid, proc_list);
-      if (idx == -1) {
-        add_proc(proc_list, get_process_info(pid));
-      }
-      else {
-        long old_utime = proc_list->procs[idx]->utime;
-        long old_stime = proc_list->procs[idx]->stime;
-        free_process_t(proc_list->procs[idx]);
-        free(proc_list->procs[idx]);
-        proc_list->procs[idx] = get_process_info(pid);
-        long long used_clocks = ((proc_list->procs[idx]->utime + proc_list->procs[idx]->stime)
-                            - (old_utime + old_stime));
-        long long total_clocks = (g_update_time - old_update_time) * sysconf(_SC_CLK_TCK);
-        proc_list->procs[idx]->cpu = 100 * (float)used_clocks / (float)total_clocks;
-        //printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
+      process_t *new = get_process_info(pid);
+      if (new != NULL) {
+        int idx = find_proc(pid, proc_list);
+        if (idx == -1) {
+          add_proc(proc_list, new);
+          //printf("*******************************adding pid: %d\n", pid);
+        }
+        else {
+          //printf("<%d == %d>", pid, proc_list->procs[idx]->pid);
+          long old_utime = proc_list->procs[idx]->utime;
+          long old_stime = proc_list->procs[idx]->stime;
+          free_process_t(proc_list->procs[idx]);
+          free(proc_list->procs[idx]);
+          proc_list->procs[idx] = new;
+          long long used_clocks = ((proc_list->procs[idx]->utime + proc_list->procs[idx]->stime)
+                              - (old_utime + old_stime));
+          long long total_clocks = (g_update_time - old_update_time) * sysconf(_SC_CLK_TCK);
+          proc_list->procs[idx]->cpu = 100 * (float)used_clocks / (float)total_clocks;
+          //printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
+        }
       }
     }
     ent = readdir(dir);
@@ -447,15 +452,6 @@ void update_processes(proc_list_t *proc_list) {
       count++;
     }
   }
-
-  // printf("---------holes----------------\n");
-  // for (int i = 0; i < proc_list->num_procs; i++) {
-  //   if (proc_list->procs[i] == NULL) { printf("_"); }
-  //   else { printf("X"); }
-  // }
-  // printf("\n");
-
-  //now batch remove the NULL holes
   int holes = 0;
   for (int i = 0; i + holes < proc_list->num_procs; i++) {
     while(i + holes < proc_list->num_procs) {
@@ -474,14 +470,6 @@ void update_processes(proc_list_t *proc_list) {
     }
   }
   proc_list->num_procs = count;
-
-
-  // printf("---------no holes----------------\n");
-  // for (int i = 0; i < proc_list->num_procs; i++) {
-  //   if (proc_list->procs[i] == NULL) { printf("_"); }
-  //   else { printf("X"); }
-  // }
-  // printf("\n");
 
   printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
 } /* update_processes() */
