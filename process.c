@@ -661,6 +661,8 @@ void add_child(process_t *proc, process_t *child) {
  */
 void calc_proc_tree(proc_list_t *proc_list) {
   for (int i = 0; i < proc_list->num_procs; i++) {
+    free(proc_list->procs[i]->children);
+    proc_list->procs[i]->children[0] = NULL;
     for (int j = 0; j < proc_list->num_procs; j++) {
       if (proc_list->procs[j]->ppid == proc_list->procs[i]->pid) {
         add_child(proc_list->procs[i], proc_list->procs[j]);
