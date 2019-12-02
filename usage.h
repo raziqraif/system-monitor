@@ -17,6 +17,11 @@ typedef struct {
   unsigned long memavailable;
   unsigned long swaptotal;
   unsigned long swapfree;
+  unsigned long net_rec_total;
+  unsigned long net_sent_total;
 } usage_t;
+
+usage_t *get_usage();
+void print_usage(usage_t *usage);
 
 #endif // USAGE_H
