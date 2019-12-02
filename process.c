@@ -15,7 +15,7 @@
 char STAT_FORMAT[] = "%d %*s %*c %d %*d %*d %*d %*d %*u %*lu "
   "%*lu %*lu %*lu %lu %lu %*ld %*ld %*ld %*ld %*ld "
   "%*ld %llu %lu %ld %*lu %*lu %*lu %*lu %*lu %*lu "
-  "%*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u "
+  "%*lu %*lu %*lu %*lu %*lu %lu %*lu %*d %*d %*u "
   "%*u %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu "
   "%*lu %*d";
 
@@ -185,16 +185,17 @@ process_t *get_process_info(int pid) {
   process_t *new_proc = malloc(sizeof(process_t));
   unsigned long long starttime_ticks = 0;
 
+  int nswap = 0;
+
   sscanf(full_stat, STAT_FORMAT, &(new_proc->pid), &(new_proc->ppid),
           &(new_proc->utime), &(new_proc->stime),
-          &starttime_ticks, &(new_proc->vsize), &(new_proc->rss));
+          &starttime_ticks, &(new_proc->vsize), &(new_proc->rss), &nswap);
 
   if (new_proc->rss == 0) {
     //probably a thread, not a process
     free(new_proc);
     free(full_status);
     free(full_stat);
-    //free(full_smaps);
     return NULL;
   }
   
@@ -218,7 +219,7 @@ process_t *get_process_info(int pid) {
   // new_proc->vmdata = parse_vm_int(get_line_by_key(full_status, "VmData:"));
   // new_proc->vmstk = parse_vm_int(get_line_by_key(full_status, "VmStk:"));
   // new_proc->vmexe = parse_vm_int(get_line_by_key(full_status, "VmExe:"));
-  new_proc->mem = new_proc->rss;
+  new_proc->mem = new_proc->rss + nswap;
   new_proc->update_flag = g_update_flag;
 
   // char *tmp_stat = strdup(full_stat);
