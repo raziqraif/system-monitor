@@ -26,6 +26,91 @@ void on_general_btn_exit_clicked(GtkWidget *widget, application_t *app) {
 }
 
 /*
+ * End process
+ */
+
+void on_btn_end_process_clicked(GtkWidget *widget, application_t *app) {
+  process_t *proc = get_selected_process(app);
+  if (proc == NULL) {
+    show_error_message(app->appw_main, "Select a process first."); 
+    return;
+  }
+  printf("CLICKED END PROCESS BUTTON\n");  
+  // TODO: End the selected process
+} /* on_btn_end_process_clicked() */
+
+/*
+ * Right click on trv_processes
+ */
+
+void on_trv_processes_button_release_event(GtkWidget *widget,
+    GdkEventButton *event, application_t *app) {
+  process_t *proc = get_selected_process(app);
+  if (proc == NULL) {
+    return;
+  }
+  if (event->button == 3) {
+    GtkBuilder *builder = gtk_builder_new_from_file("ui_files/main_window.glade");
+    // Retrieve application window and menu bar
+    GtkMenu *mnu_context =
+      GTK_MENU(gtk_builder_get_object(builder, "mnu_context"));
+    gtk_builder_connect_signals(builder, app);
+    gtk_menu_popup_at_pointer(mnu_context, (GdkEvent *) event);
+  }
+} /* on_trv_processes_button_release_event() */
+
+/*
+ * Stop process
+ */
+
+void on_mnu_stop_process_activate(GtkWidget *widget, application_t *app) {
+  process_t *proc = get_selected_process(app);
+  if (proc == NULL) {
+    show_error_message(app->appw_main, "Select a process first."); 
+    return;
+  }
+  
+  // TODO: Stop the process 
+  printf("Stop process\n");
+  
+  update_processes_treeview(app);
+} /* on_mnu_stop_process_activate() */
+
+/*
+ * Continue process
+ */
+
+void on_mnu_continue_process_activate(GtkWidget *widget, application_t *app) {
+  process_t *proc = get_selected_process(app);
+  if (proc == NULL) {
+    show_error_message(app->appw_main, "Select a process first."); 
+    return;
+  }
+  
+  // TODO: Continue the process 
+  printf("Continue process\n");
+
+  update_processes_treeview(app);
+} /* on_mnu_continue_process_activate() */
+
+/*
+ * Kill process
+ */
+
+void on_mnu_kill_process_activate(GtkWidget *widget, application_t *app) {
+  process_t *proc = get_selected_process(app);
+  if (proc == NULL) {
+    show_error_message(app->appw_main, "Select a process first."); 
+    return;
+  }
+  
+  // TODO: Kill the process 
+  printf("Kill process\n");
+
+  update_processes_treeview(app);
+} /* on_mnu_continue_process_activate() */
+
+/*
  * Called when exit menu is clicked
  */
 
@@ -38,15 +123,16 @@ void on_mnu_exit_activate(GtkWidget *widget, application_t *app) {
  */
 
 void on_mnu_memory_maps_activate(GtkWidget *widget, application_t *app) {
-
+  printf("Test1\n");
   process_t *proc = get_selected_process(app);
   if (proc == NULL) {
     show_error_message(app->appw_main, "Select a process first."); 
     return;
   }
+  printf("Test2\n");
   smap_t **smaps = get_smaps(proc->pid);
+  printf("Test3\n");
   if (!smaps) {
-    // TODO: ADD A MESSAGEBOX 
     show_error_message(app->appw_main, "Permission denied."); 
     printf("PERMISSION DENIED\n");
     return;
