@@ -141,7 +141,6 @@ void configure_processes_tab(application_t *app, GtkBuilder *builder) {
   gtk_tree_view_column_add_attribute(col4, rnd4, "text", 3);
   gtk_tree_view_column_add_attribute(col5, rnd5, "text", 4);
 
-  //g_object_unref(G_OBJECT(builder));
 } /* configure_processes_tab() */
 
 /*

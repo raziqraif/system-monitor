@@ -20,6 +20,82 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkMenu" id="mnu_context">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="mnu_stop_process">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Stop Process</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_stop_process_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="mnu_continue_process">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Continue Process</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_continue_process_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="mnu_kill_process">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Kill Process</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_kill_process_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Memory Maps</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_memory_maps_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Open Files</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_open_files_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Properties</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_mnu_properties_activate" swapped="no"/>
+      </object>
+    </child>
+  </object>
   <object class="GtkTreeStore" id="tree_store_processes">
     <columns>
       <!-- column-name ProcessName -->
@@ -261,6 +337,7 @@
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">10</property>
                     <property name="relief">half</property>
+                    <signal name="clicked" handler="on_btn_end_process_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -284,6 +361,7 @@
                         <property name="can_focus">True</property>
                         <property name="model">tree_store_processes</property>
                         <property name="search_column">0</property>
+                        <signal name="button-release-event" handler="on_trv_processes_button_release_event" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="sel_processes"/>
                         </child>

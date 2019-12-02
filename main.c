@@ -43,12 +43,21 @@ int main(int argc, char *argv[]) {
 
 bool timer_handler(application_t *app) {
   g_seconds_passed++;
-  // printf("%d seconds have passed.\n", g_seconds_passed);
   if (g_seconds_passed == 1) {
     update_processes_treeview(app);
   }
+
+  // Update load averages
   if (g_seconds_passed % 1 == 0) {
-      //update_processes_treeview(app);
+    char *prefix = "Load averages for the last 1, 5, 15 minutes: ";
+    char *desc = malloc(strlen(prefix) + strlen(app->processes_list->load_avg) + 1);
+    strcpy(desc, prefix);
+    strcat(desc, app->processes_list->load_avg);
+    // Set the label
+    gtk_label_set_text(GTK_LABEL(app->processes_tab->lbl_description), desc);
+    free(desc);
+    desc = NULL;
   }
+
   return true;   
 } /* timer_handler() */
