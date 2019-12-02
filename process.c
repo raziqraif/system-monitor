@@ -373,7 +373,7 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   }
   proc_list->procs[pos] = new_proc;
   proc_list->num_procs++;
-  printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
+  //printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
 } /* add_proc() */
 
 
@@ -429,7 +429,7 @@ proc_list_t *get_processes() {
  * Update a proc_list_t. If a process no longer exists, it is freed and NULLed.
  */
 void update_processes(proc_list_t *proc_list) {
-  printf("-------updating processes------------");
+  //printf("-------updating processes------------");
   pthread_mutex_lock(&g_update_processes_mutex);
   g_update_flag++;
 
@@ -482,21 +482,19 @@ void update_processes(proc_list_t *proc_list) {
         }
       }
       else {
-        printf("[%d]", pid);
+        //printf("[%d]", pid);
       }
     }
     ent = readdir(dir);
   }
   closedir(dir);
 
-  printf("\n");
-
   int count = 0;
   for (int i = 0; i < proc_list->num_procs; i++) {
     if (proc_list->procs[i]->update_flag != g_update_flag) {
-      printf("WRONG UPDATE_FLAG: %d != %d PID: %d\n",
+      /*printf("WRONG UPDATE_FLAG: %d != %d PID: %d\n",
           proc_list->procs[i]->update_flag, g_update_flag,
-          proc_list->procs[i]->pid);
+          proc_list->procs[i]->pid);*/
       free_process_t(proc_list->procs[i]);
       free(proc_list->procs[i]);
       proc_list->procs[i] = NULL;

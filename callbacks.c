@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
 #include <assert.h>
+#include <signal.h>
 
 #include "main.h"
 #include "process.h"
@@ -104,8 +105,8 @@ void on_mnu_kill_process_activate(GtkWidget *widget, application_t *app) {
     return;
   }
   
-  // TODO: Kill the process 
-  printf("Kill process\n");
+  kill(proc->pid, SIGKILL);
+  printf("sent SIGKILL to %d\n", proc->pid);
 
   update_processes_treeview(app);
 } /* on_mnu_continue_process_activate() */
