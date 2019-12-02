@@ -7,18 +7,26 @@
 #include <stdbool.h>
 #include <math.h>
 #include <ctype.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #include "gui.h"
 
 #define DEBUG (1)
 
 int g_seconds_passed = 0;
+pthread_mutex_t g_update_processes_mutex = {0};
+pthread_mutex_t g_get_process_info_mutex = {0};
+
 
 /*
  * Runs the application 
  */
 
 int main(int argc, char *argv[]) {
+
+  pthread_mutex_init(&g_update_processes_mutex, NULL);
+  pthread_mutex_init(&g_get_process_info_mutex, NULL);
 
   gtk_init(&argc, &argv);
   application_t *app = init_application(argc, argv);

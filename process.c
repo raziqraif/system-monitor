@@ -6,6 +6,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <errno.h>
 
 #include "process.h"
 
@@ -47,6 +50,9 @@ int g_btime = 0;
 int g_update_flag = 1;
 time_t g_update_time = 0;
 
+extern pthread_mutex_t g_update_processes_mutex;
+extern pthread_mutex_t g_get_process_info_mutex;
+
 /*
  * Open the file and malloc a string to hold its contents.
  * returned string must be freed by caller.
@@ -55,6 +61,7 @@ time_t g_update_time = 0;
 char *file_to_str(char *filepath) {
   FILE *fp = fopen(filepath, "r");
   if (fp == NULL) {
+    printf("(%s)", strerror(errno));
     //printf("fopen failed for: %s\n", filepath);
     return NULL;
   }
@@ -158,22 +165,29 @@ int parse_vm_int(char *line) {
  */
 
 process_t *get_process_info(int pid) {
+  pthread_mutex_lock(&g_get_process_info_mutex);
   char path[128];
   sprintf(path, "/proc/%d/status", pid);
   char *full_status = file_to_str(path);
   if (full_status == NULL) {
+    pthread_mutex_unlock(&g_get_process_info_mutex);
+    printf("<FS>");
     return NULL;
   }
 
   sprintf(path, "/proc/%d/stat", pid);
   char *full_stat = file_to_str(path);
   if (full_stat == NULL) {
+    pthread_mutex_unlock(&g_get_process_info_mutex);
+    printf("<S>");
     return NULL;
   }
 
   sprintf(path, "/proc/%d/statm", pid);
   FILE *statm_fp = fopen(path, "r");
   if (statm_fp == NULL) {
+    pthread_mutex_unlock(&g_get_process_info_mutex);
+    printf("<SM>");
     return NULL;
   }
 
@@ -198,6 +212,8 @@ process_t *get_process_info(int pid) {
     free(new_proc);
     free(full_status);
     free(full_stat);
+    fclose(statm_fp);
+    pthread_mutex_unlock(&g_get_process_info_mutex);
     return NULL;
   }
   
@@ -232,6 +248,7 @@ process_t *get_process_info(int pid) {
   free(full_status);
   free(full_stat);
   fclose(statm_fp);
+  pthread_mutex_unlock(&g_get_process_info_mutex);
   return new_proc;
 } /* get_process_info() */
 
@@ -356,7 +373,7 @@ void add_proc(proc_list_t *proc_list, process_t *new_proc) {
   }
   proc_list->procs[pos] = new_proc;
   proc_list->num_procs++;
-  //printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
+  printf("added proc %d to position: %d\n", new_proc->pid, proc_list->num_procs - 1);
 } /* add_proc() */
 
 
@@ -412,6 +429,8 @@ proc_list_t *get_processes() {
  * Update a proc_list_t. If a process no longer exists, it is freed and NULLed.
  */
 void update_processes(proc_list_t *proc_list) {
+  printf("-------updating processes------------");
+  pthread_mutex_lock(&g_update_processes_mutex);
   g_update_flag++;
 
   free(proc_list->load_avg);
@@ -433,6 +452,7 @@ void update_processes(proc_list_t *proc_list) {
   DIR *dir = opendir("/proc/");
   if (dir == NULL) {
     printf("Could not open dir: %s\n", "/proc/");
+    pthread_mutex_unlock(&g_update_processes_mutex);
     return;
   }
   time_t old_update_time = g_update_time;
@@ -446,7 +466,6 @@ void update_processes(proc_list_t *proc_list) {
         int idx = find_proc(pid, proc_list);
         if (idx == -1) {
           add_proc(proc_list, new);
-          //printf("*******************************adding pid: %d\n", pid);
         }
         else {
           //printf("<%d == %d>", pid, proc_list->procs[idx]->pid);
@@ -462,14 +481,22 @@ void update_processes(proc_list_t *proc_list) {
           //printf("cpu: %lld = %f, %lld = %f, %f\n", used_clocks, (float)used_clocks, total_clocks, (float)total_clocks, 100 * (float)used_clocks / (float)total_clocks);
         }
       }
+      else {
+        printf("[%d]", pid);
+      }
     }
     ent = readdir(dir);
   }
   closedir(dir);
 
+  printf("\n");
+
   int count = 0;
   for (int i = 0; i < proc_list->num_procs; i++) {
     if (proc_list->procs[i]->update_flag != g_update_flag) {
+      printf("WRONG UPDATE_FLAG: %d != %d PID: %d\n",
+          proc_list->procs[i]->update_flag, g_update_flag,
+          proc_list->procs[i]->pid);
       free_process_t(proc_list->procs[i]);
       free(proc_list->procs[i]);
       proc_list->procs[i] = NULL;
@@ -498,6 +525,8 @@ void update_processes(proc_list_t *proc_list) {
   proc_list->num_procs = count;
 
   printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
+
+  pthread_mutex_unlock(&g_update_processes_mutex);
 } /* update_processes() */
 
 
