@@ -23,6 +23,8 @@ char STAT_PATH[] = "/proc/stat";
 char MEMINFO_PATH[] = "/proc/meminfo";
 char NET_DEV_PATH[] = "/proc/net/dev";
 
+char MEM_MESSAGE[] = "%.1f GiB (%.1f%%) of %.1f GiB";
+char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB"
 
 /*
  * mallocs a new usage_t and fills its fields
@@ -85,6 +87,18 @@ usage_t *get_usage() {
   usage->net_rec_total = net_rec_total;
   usage->net_sent_total = net_sent_total;
 
+  //Generate messages
+  char buf[512];
+  float memused_GiB = (((float) (usage->memtotal - usage->memavailable) / 1024.0) / 1024.0) / 1024.0;
+  float memtot_GiB = (((float) usage->memtotal / 1024.0) / 1024.0) / 1024.0;
+  sprintf(buf, MEM_MESSAGE, memused_GiB, memused_GiB / memtot_GiB, memtot_GiB);
+  usage->mem_message = strdup(buf);
+
+  float swapused_GiB = (((float) (usage->swaptotal - usage->swapfree) / 1024.0) / 1024.0) / 1024.0;
+  float swaptot_GiB = (((float) usage->swaptotal / 1024.0) / 1024.0) / 1024.0;
+  sprintf(buf, MEM_MESSAGE, swapused_GiB, swapused_GiB / swaptot_GiB, swaptot_GiB);
+  usage->swap_message = strdup(buf);
+
   fclose(stat_fp);
   stat_fp = NULL;
   fclose(meminfo_fp);
@@ -94,6 +108,20 @@ usage_t *get_usage() {
 } /* get_usage() */
 
 
+/*
+ * Free the malloc'd fields of a usage_t
+ */
+void free_usage(usage_t *usage) {
+  free(usage->mem_message);
+  free(usage->swap_message);
+  usage->mem_message = NULL;
+  usage->swap_message = NULL;
+} /* free_usage() */
+
+
+/*
+ *
+ */
 void print_usage(usage_t *usage) {
   printf("USAGE======\n"
       "user: %lu, system: %lu, idle: %lu\n"
@@ -109,4 +137,4 @@ void print_usage(usage_t *usage) {
         usage->net_rec_total,
         usage->net_sent_total
       );
-}
+} /* print_usage() */
