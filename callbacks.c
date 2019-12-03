@@ -37,7 +37,8 @@ void on_btn_end_process_clicked(GtkWidget *widget, application_t *app) {
     return;
   }
   printf("CLICKED END PROCESS BUTTON\n");  
-  // TODO: End the selected process
+  kill(proc->pid, SIGKILL);
+  update_processes_treeview(app);
 } /* on_btn_end_process_clicked() */
 
 /*
