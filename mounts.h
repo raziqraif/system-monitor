@@ -9,6 +9,7 @@ typedef struct {
   char *total_size;
   char *free_size;
   char *available_size;
+  long available_bytes;
   char *used_size;
 } device_t;
 

@@ -98,6 +98,7 @@ device_t *get_devices() {
     }
 
     long avail = device_stats.f_bavail * device_stats.f_bsize;
+    devices[i].available_bytes = avail;
     if (avail / 1024 < 1000) {
       sprintf(devices[i].available_size, "%.1f KiB", (float) (avail / 1024.0));
     }
