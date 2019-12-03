@@ -14,6 +14,7 @@
 #include "sysinfo.h"
 #include "mounts.h"
 #include "callbacks.h"
+#include "usage.h"
 #include "process.h"
 #include "main.h"
 
@@ -181,6 +182,14 @@ void configure_resources_tab(application_t *app, GtkBuilder *builder) {
   res_tab->lbl_resources_total_sent = GTK_WIDGET(
     gtk_builder_get_object(builder, "lbl_resources_total_sent"));
   assert(res_tab->lbl_resources_total_sent);
+
+  res_tab->total_cpu_util = 0;
+  for (int i = 0; i < 100; i++) {
+     res_tab->total_cpu_utils[i] = 0;
+  }
+  res_tab->prev_received_network = 0;
+  res_tab->prev_sent_network = 0;
+
 } /*configure_resources_tab() */
 
 /*
@@ -245,6 +254,9 @@ void free_application(application_t *app) {
 
 void update_processes_treeview(application_t *app) {
   assert(app); 
+  if (!g_refresh_ready) {
+    return;
+  }
   // TODO: Clear tree store first before appending processes 
   GtkTreeStore *treestore = app->processes_tab->tree_store_processes;
   clear_treeview(treestore, TREESTORE);
@@ -287,6 +299,7 @@ void update_processes_treeview(application_t *app) {
       insert_child_processes(procs[i], treestore, &iter);
     }
   }
+  g_refresh_ready = false;
 } /* update_processes_treeview() */
 
 /*

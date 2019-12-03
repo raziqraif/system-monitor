@@ -39,7 +39,8 @@ void on_btn_end_process_clicked(GtkWidget *widget, application_t *app) {
   }
   printf("CLICKED END PROCESS BUTTON\n");  
   kill(proc->pid, SIGKILL);
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_btn_end_process_clicked() */
 
 /*
@@ -75,8 +76,8 @@ void on_mnu_stop_process_activate(GtkWidget *widget, application_t *app) {
   
   kill(proc->pid, SIGSTOP);
   printf("sent SIGSTOP to %d\n", proc->pid);
-  
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_stop_process_activate() */
 
 /*
@@ -93,7 +94,8 @@ void on_mnu_continue_process_activate(GtkWidget *widget, application_t *app) {
   kill(proc->pid, SIGCONT);
   printf("sent SIGCONT to %d\n", proc->pid);
 
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_continue_process_activate() */
 
 /*
@@ -110,7 +112,8 @@ void on_mnu_kill_process_activate(GtkWidget *widget, application_t *app) {
   kill(proc->pid, SIGKILL);
   printf("sent SIGKILL to %d\n", proc->pid);
 
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_continue_process_activate() */
 
 /*
@@ -427,7 +430,8 @@ void on_mnu_refresh_activate(GtkWidget *widget, application_t *app) {
 
 void on_mnu_all_processes_toggled(GtkWidget *widget, application_t *app) {
   g_list_processes_mode = ALL_PROCESSES;
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_all_processes_toggled() */
 
 /*
@@ -436,7 +440,8 @@ void on_mnu_all_processes_toggled(GtkWidget *widget, application_t *app) {
 
 void on_mnu_active_processes_toggled(GtkWidget *widget, application_t *app) {
   g_list_processes_mode = ACTIVE_PROCESSES;
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_active_processes_toggled() */
 
 /*
@@ -445,7 +450,8 @@ void on_mnu_active_processes_toggled(GtkWidget *widget, application_t *app) {
 
 void on_mnu_my_processes_toggled(GtkWidget *widget, application_t *app) {
   g_list_processes_mode = MY_PROCESSES;
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_my_processes_toggled() */
 
 /*
@@ -454,7 +460,8 @@ void on_mnu_my_processes_toggled(GtkWidget *widget, application_t *app) {
 
 void on_mnu_dependencies_toggled(GtkWidget *widget, application_t *app) {
   g_list_processes_w_dependency = !g_list_processes_w_dependency;
-  update_processes_treeview(app);
+  g_priority_refresh_pending = true;
+  // update_processes_treeview(app);
 } /* on_mnu_dependencies_toggled() */
 
 /*
@@ -490,13 +497,16 @@ gboolean on_drw_cpu_draw(GtkWidget *widget, cairo_t *cr, application_t *app) {
   width = gtk_widget_get_allocated_width(widget);
   height = gtk_widget_get_allocated_height(widget);
   */
+  resources_tab_t *res_tab = app->resources_tab;
 
   cairo_set_line_width(cr, 1.0);
 
   for (int i = 0; i < 99; i++) {
     cairo_set_source_rgb(cr, 1.0, 0.0, 0.0); // Red
-    cairo_move_to(cr, (double)((i * 4) + 10), (double)(2 * (100 - cpu[i]) + 10));
-    cairo_line_to(cr, (double)(((i + 1) * 4) + 10), (double)(2 * (100 - cpu[i + 1]) + 10));
+    cairo_move_to(cr, (double)((i * 4) + 10), 
+                  (double)(2 * (100 - res_tab->total_cpu_utils[i]) + 10));
+    cairo_line_to(cr, (double)(((i + 1) * 4) + 10),
+                  (double)(2 * (100 - res_tab->total_cpu_utils[i + 1]) + 10));
     cairo_stroke(cr);
   }
   return false;
