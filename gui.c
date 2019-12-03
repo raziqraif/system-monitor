@@ -149,7 +149,38 @@ void configure_processes_tab(application_t *app, GtkBuilder *builder) {
  */
 
 void configure_resources_tab(application_t *app, GtkBuilder *builder) {
-
+  // Retrieve widgets for resources tab
+  resources_tab_t *res_tab = app->resources_tab;
+  res_tab->drw_cpu = GTK_WIDGET(
+    gtk_builder_get_object(builder, "drw_cpu"));
+  assert(res_tab->drw_cpu);
+  res_tab->drw_cpu = 
+    GTK_WIDGET( gtk_builder_get_object(builder, "drw_memory"));
+  assert(res_tab->drw_cpu);
+  res_tab->drw_cpu = GTK_WIDGET(
+    gtk_builder_get_object(builder, "drw_network"));
+  assert(res_tab->drw_cpu);
+  res_tab->lbl_resources_total_cpu = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_total_cpu"));
+  assert(res_tab->lbl_resources_total_cpu);
+  res_tab->lbl_resources_memory = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_memory"));
+  assert(res_tab->lbl_resources_memory);
+  res_tab->lbl_resources_swap = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_swap"));
+  assert(res_tab->lbl_resources_swap);
+  res_tab->lbl_resources_receiving = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_receiving"));
+  assert(res_tab->lbl_resources_receiving);
+  res_tab->lbl_resources_total_received = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_total_received"));
+  assert(res_tab->lbl_resources_total_received);
+  res_tab->lbl_resources_sending = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_sending"));
+  assert(res_tab->lbl_resources_sending);
+  res_tab->lbl_resources_total_sent = GTK_WIDGET(
+    gtk_builder_get_object(builder, "lbl_resources_total_sent"));
+  assert(res_tab->lbl_resources_total_sent);
 } /*configure_resources_tab() */
 
 /*

@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
 #include <assert.h>
+#include <stdbool.h>
 #include <signal.h>
 
 #include "main.h"
@@ -475,3 +476,28 @@ void show_error_message(GtkWidget *window, const char *msg) {
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
 } /* show_error_message() */
+
+/*
+ * Draw on cpu drawing area
+ * 
+ * https://www.youtube.com/watch?v=ejOFZEe7K68
+ */
+
+gboolean on_drw_cpu_draw(GtkWidget *widget, cairo_t *cr, application_t *app) {
+  /*
+  guint width = 0;
+  guint height = 0;
+  width = gtk_widget_get_allocated_width(widget);
+  height = gtk_widget_get_allocated_height(widget);
+  */
+
+  cairo_set_line_width(cr, 1.0);
+
+  for (int i = 0; i < 99; i++) {
+    cairo_set_source_rgb(cr, 1.0, 0.0, 0.0); // Red
+    cairo_move_to(cr, (double)((i * 4) + 10), (double)(2 * (100 - cpu[i]) + 10));
+    cairo_line_to(cr, (double)(((i + 1) * 4) + 10), (double)(2 * (100 - cpu[i + 1]) + 10));
+    cairo_stroke(cr);
+  }
+  return false;
+ } /* on _drw_cpu_draw() */

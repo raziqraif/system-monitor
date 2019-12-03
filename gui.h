@@ -38,7 +38,16 @@ typedef struct processes {
 // Resources tab in application
 typedef struct resources {
   // TODO: Update this after completing the GUI
-  GtkWidget *dummy_widget;
+  GtkWidget *drw_cpu;
+  GtkWidget *drw_memory;
+  GtkWidget * drw_network;
+  GtkWidget *lbl_resources_total_cpu;
+  GtkWidget *lbl_resources_memory;
+  GtkWidget *lbl_resources_swap;
+  GtkWidget *lbl_resources_receiving;
+  GtkWidget *lbl_resources_total_received;
+  GtkWidget *lbl_resources_sending;
+  GtkWidget *lbl_resources_total_sent;
 } resources_tab_t;
 
 // File systems tab in application
