@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "sysinfo.h"
+#include "mounts.h"
 #include "callbacks.h"
 #include "process.h"
 #include "main.h"
@@ -328,13 +329,14 @@ void update_devices_treeview(application_t *app) {
   GtkListStore *liststore = app->file_systems_tab->lst_store_devices;
   clear_treeview(liststore, LISTSTORE);
   GtkTreeIter iter;
-
+  device_t *devices = get_devices();
   // TODO: Get list of devices
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; devices[i].is_valid == 1; i++) {
+    device_t device = devices[i];
     gtk_list_store_append(liststore, &iter);
-    gtk_list_store_set(liststore, &iter, 0, "device", -1);
-    gtk_list_store_set(liststore, &iter, 1, "directory", -1);
-    gtk_list_store_set(liststore, &iter, 2, "type", -1);
+    gtk_list_store_set(liststore, &iter, 0, device.device_name, -1);
+    gtk_list_store_set(liststore, &iter, 1, device.mount_point, -1);
+    gtk_list_store_set(liststore, &iter, 2, device.fstype, -1);
     gtk_list_store_set(liststore, &iter, 3, "total", -1);
     gtk_list_store_set(liststore, &iter, 4, "free", -1);
     gtk_list_store_set(liststore, &iter, 5, "available", -1);
