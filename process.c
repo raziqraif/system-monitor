@@ -752,7 +752,7 @@ fds_t **get_fds(int pid) {
   rewinddir(dir);
 
   int i = 0;
-  struct dirent *ent = readdir(dir);
+  ent = readdir(dir);
   while(ent != NULL) {
     if (i == count) {
       printf("souldn't be here!=======================\n");
