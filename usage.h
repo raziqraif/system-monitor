@@ -10,6 +10,14 @@
 #define MAX_PROCS (1024)
 
 typedef struct {
+  char *name;
+  unsigned long user;
+  unsigned long system;
+  unsigned long idle;
+} cpu_usage_t;
+
+typedef struct {
+  char *name;
   char *mem_message;
   char *swap_message;
   unsigned long user;
@@ -21,6 +29,8 @@ typedef struct {
   unsigned long swapfree;
   unsigned long net_rec_total;
   unsigned long net_sent_total;
+  cpu_usage_t **cpus;
+  int num_cpus;
 } usage_t;
 
 usage_t *get_usage();
