@@ -14,7 +14,7 @@
 #define LINES_PER_SMAP (21)
 #define LINE_BUF (2048)
 
-char STAT_CPU_FORMAT[] = "%*s %d %*d %d %d %*d %*d %*d %*d %*d %*d";
+char STAT_CPU_FORMAT[] = "%s %d %*d %d %d %*d %*d %*d %*d %*d %*d";
 char MEMINFO_FORMAT[] = "MemTotal: %lu%*[^\n]\n"
     "MemFree: %*u%*[^\n]\n"
     "MemAvailable: %lu%*[^\n]\n";
@@ -49,8 +49,37 @@ char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
   }
 
   usage_t *usage = malloc(sizeof(usage_t));
+  usage->cpus = malloc(sizeof(cpu_usage_t *));
+  usage->cpus[0] = NULL;
+  usage->num_cpus = 0;
 
-  fscanf(stat_fp, STAT_CPU_FORMAT, &(usage->user), &(usage->system), &(usage->idle));
+  usage->name = malloc(sizeof(char) * 128);
+
+  int check = fscanf(stat_fp, STAT_CPU_FORMAT,
+                usage->name, &(usage->user),
+                &(usage->system), &(usage->idle));
+
+  char tempname[128];
+  unsigned long tempuser;
+  unsigned long tempsystem;
+  unsigned long tempidle;
+
+  while (check == 4) {
+    check = fscanf(stat_fp, STAT_CPU_FORMAT,
+            tempname, &tempuser,
+            &tempsystem, &tempidle);
+    if (check == 4) {
+      usage->num_cpus++;
+      usage->cpus = realloc(usage->cpus, sizeof(cpu_usage_t *) * (usage->num_cpus + 1));
+      usage->cpus[usage->num_cpus - 1] = malloc(sizeof(cpu_usage_t));
+      usage->cpus[usage->num_cpus - 1]->name = strdup(tempname);
+      usage->cpus[usage->num_cpus - 1]->user = tempuser;
+      usage->cpus[usage->num_cpus - 1]->system = tempsystem;
+      usage->cpus[usage->num_cpus - 1]->idle = tempidle;
+      usage->cpus[usage->num_cpus] = NULL;
+    }
+  }
+
   fscanf(meminfo_fp, MEMINFO_FORMAT, &(usage->memtotal), &(usage->memavailable));
 
   char *swap_total_line = get_line_by_key(file_to_str(MEMINFO_PATH), "SwapTotal");
@@ -114,8 +143,10 @@ char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
  * Free the malloc'd fields of a usage_t
  */
 void free_usage(usage_t *usage) {
+  free(usage->name);
   free(usage->mem_message);
   free(usage->swap_message);
+  usage->name = NULL;
   usage->mem_message = NULL;
   usage->swap_message = NULL;
 } /* free_usage() */
