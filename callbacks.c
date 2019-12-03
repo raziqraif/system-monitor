@@ -125,15 +125,12 @@ void on_mnu_exit_activate(GtkWidget *widget, application_t *app) {
  */
 
 void on_mnu_memory_maps_activate(GtkWidget *widget, application_t *app) {
-  printf("Test1\n");
   process_t *proc = get_selected_process(app);
   if (proc == NULL) {
     show_error_message(app->appw_main, "Select a process first."); 
     return;
   }
-  printf("Test2\n");
   smap_t **smaps = get_smaps(proc->pid);
-  printf("Test3\n");
   if (!smaps) {
     show_error_message(app->appw_main, "Permission denied."); 
     printf("PERMISSION DENIED\n");
@@ -273,7 +270,12 @@ void on_mnu_open_files_activate(GtkWidget *widget, application_t *app) {
     show_error_message(app->appw_main, "Select a process first.");
     return;
   }
-
+  fds_t **fds = get_fds(proc->pid);
+  if (fds == NULL) {
+    show_error_message(app->appw_main, "Permission denied.");
+    return;
+  }
+  
   GtkBuilder *builder = gtk_builder_new_from_file("ui_files/open_files_window.glade");
   // Retrieve application window and menu bar
   GtkWidget *win_main = GTK_WIDGET(gtk_builder_get_object(builder, "win_main"));
@@ -314,12 +316,11 @@ void on_mnu_open_files_activate(GtkWidget *widget, application_t *app) {
   gtk_tree_view_column_add_attribute(col2, rnd2, "text", 1);
   gtk_tree_view_column_add_attribute(col3, rnd3, "text", 2);
 
-  int dummy = 2;
-  for (int i = 0; i < dummy; i++) {
+  for (int i = 0; fds[i] != NULL; i++) {
     gtk_list_store_append(lst_store_files, &iter);
-    gtk_list_store_set(lst_store_files, &iter, 0, "TEST", -1);
-    gtk_list_store_set(lst_store_files, &iter, 1, "TEST", -1);
-    gtk_list_store_set(lst_store_files, &iter, 2, "TEST", -1);
+    gtk_list_store_set(lst_store_files, &iter, 0, fds[i]->fd_str, -1);
+    gtk_list_store_set(lst_store_files, &iter, 1, fds[i]->type, -1);
+    gtk_list_store_set(lst_store_files, &iter, 2, fds[i]->object, -1);
   } 
  
   gtk_builder_connect_signals(builder, app);

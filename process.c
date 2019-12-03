@@ -757,6 +757,11 @@ fds_t **get_fds(int pid) {
     if (i == count) {
       printf("souldn't be here!=======================\n");
     }
+    if ((strcmp(ent->d_name, ".") == 0) ||
+        (strcmp(ent->d_name, "..") == 0)) {
+      ent = readdir(dir);
+      continue;
+    }
     fds_arr[i] = malloc(sizeof(fds_t));
     fds_t *fds = fds_arr[i];
     fds->fd_str = strdup(ent->d_name);
@@ -793,6 +798,8 @@ fds_t **get_fds(int pid) {
     i++;
     ent = readdir(dir);
   }
+
+  fds_arr[i] = NULL;
   closedir(dir);
 
   return fds_arr;
