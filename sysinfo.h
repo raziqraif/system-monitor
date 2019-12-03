@@ -1,6 +1,8 @@
 #ifndef SYSINFO_H
 #define SYSINFO_H
 
+#include "mounts.h"
+
 typedef struct {
   char *kernel_version;
   char *memory;

@@ -50,17 +50,24 @@ system_info_t *get_sys_info() {
     system_info->process_version = strdup(process_version);
   }
 
-  float available_space = 0;
-  struct statvfs stats = { 0 };
-  int check = statvfs("/", &stats);
-  if (check < 0) {
-    printf("error in statvfs!\n");
+  long available_space = 0;
+  device_t *devices = get_devices();
+  for (int i = 0; devices[i].is_valid == 1; i++) {
+    available_space += devices[i].available_bytes;
+  }
+  system_info->disk_space = (char *) malloc(20 * sizeof(char));
+  if (available_space / 1024 < 1000) {
+    sprintf(system_info->disk_space, "%.1f KiB",
+                                     (float) (available_space / 1024.0));
+  }
+  else if (available_space / 1048576 < 1000) {
+    sprintf(system_info->disk_space, "%.1f MiB",
+                                     (float) (available_space / 1048576.0));
   }
   else {
-    available_space = (stats.f_bsize / 1024.0) * (stats.f_bavail / (1024.0 * 1024.0)) ;
+    sprintf(system_info->disk_space, "%.1f GiB",
+                                     (float) (available_space / 1073741824.0));
   }
-  system_info->disk_space = malloc(128);
-  sprintf(system_info->disk_space, "%.1f GiB", available_space);
 
   free(version);
   version = NULL;
