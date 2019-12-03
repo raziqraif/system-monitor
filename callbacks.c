@@ -511,3 +511,23 @@ gboolean on_drw_cpu_draw(GtkWidget *widget, cairo_t *cr, application_t *app) {
   }
   return false;
  } /* on _drw_cpu_draw() */
+
+/*
+ * Draw on memory drawing area
+ * 
+ * https://www.youtube.com/watch?v=ejOFZEe7K68
+ */
+
+gboolean on_drw_memory_draw(GtkWidget *widget, cairo_t *cr, application_t *app) {
+  return false;
+} /* on _drw_cpu_draw() */
+
+/*
+ * Draw on network drawing area
+ * 
+ * https://www.youtube.com/watch?v=ejOFZEe7K68
+ */
+
+gboolean on_drw_network_draw(GtkWidget *widget, cairo_t *cr, application_t *app) {
+  return false;
+} /* on _drw_cpu_draw() */
