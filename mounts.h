@@ -6,9 +6,10 @@ typedef struct {
   char *device_name;
   char *mount_point;
   char *fstype;
-  /*char *total_size;
-  char *available;
-  char *used*/
+  char *total_size;
+  char *free_size;
+  char *available_size;
+  char *used_size;
 } device_t;
 
 device_t *get_devices();

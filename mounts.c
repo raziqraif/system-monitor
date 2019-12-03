@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/statvfs.h>
 
 /*
  * Finds information about each mounted fs, and returns it in an array
@@ -22,9 +24,7 @@ device_t *get_devices() {
 
   // Get the device name, mount point, and fs type
   while (current_char != 255) {
-    //printf("%d", current_char);
     if (current_char == '\n') {
-      //printf("\n");
       devices[line].is_valid = 1;
       word_num = 0;
       line++;
@@ -33,7 +33,6 @@ device_t *get_devices() {
       word = (char *) malloc(50 * sizeof(char));
       if (line == (num_devices - 1)) {
         // If the devices array is full, double the size and continue
-        //printf("Resizing devices[] from %d to %d\n", num_devices, num_devices * 2);
         num_devices = num_devices * 2;
         devices = realloc(devices, num_devices);
       }
@@ -43,15 +42,12 @@ device_t *get_devices() {
       word[char_num] = '\0';
       if (word_num == 0) {
         devices[line].device_name = strdup(word);
-        //printf("%s\n", word);
       }
       else if (word_num == 1) {
         devices[line].mount_point = strdup(word);
-        //printf("%s\n", word);
       }
       else if (word_num == 2) {
         devices[line].fstype = strdup(word);
-        //printf("%s\n", word);
       }
       free(word);
       word = (char *) malloc(50 * sizeof(char));
@@ -65,11 +61,33 @@ device_t *get_devices() {
     current_char = fgetc(mounts_fp);
   }
 
-  printf("Finished while loop\n");
-
   devices[line].is_valid = 0;
 
-  // TODO statvfs to find sizes
+  // Use statvfs to find sizes
+  for (int i = 0; devices[i].is_valid == 1; i++) {
+    struct statvfs device_stats = { 0 };
+    if (statvfs(devices[i].mount_point, &device_stats) != 0) {
+      printf("statvfs failure\n");
+    }
+    int total = device_stats.f_blocks;
+    int free = device_stats.f_bfree;
+    int avail = device_stats.f_bavail;
+    int used = total - free;
+    //int bsize = device_stats.f_bsize;
+    devices[i].total_size = (char *) malloc(20 * sizeof(char));
+    devices[i].free_size = (char *) malloc(20 * sizeof(char));
+    devices[i].available_size = (char *) malloc(20 * sizeof(char));
+    devices[i].used_size = (char *) malloc(20 * sizeof(char));
+    sprintf(devices[i].total_size, "%d", total);
+    sprintf(devices[i].free_size, "%d", free);
+    sprintf(devices[i].available_size, "%d", avail);
+    sprintf(devices[i].used_size, "%d", used);
+    /*printf("%s:\nblock size - %d\ntotal - %d\nfree - %d\navail - %d\n\n", devices[i].device_name,
+                                                                          bsize,
+                                                         total,
+                                                         free,
+                                                         avail);*/
+  }
 
   return devices;
 
