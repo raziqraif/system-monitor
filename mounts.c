@@ -69,24 +69,55 @@ device_t *get_devices() {
     if (statvfs(devices[i].mount_point, &device_stats) != 0) {
       printf("statvfs failure\n");
     }
-    int total = device_stats.f_blocks;
-    int free = device_stats.f_bfree;
-    int avail = device_stats.f_bavail;
-    int used = total - free;
-    //int bsize = device_stats.f_bsize;
+
     devices[i].total_size = (char *) malloc(20 * sizeof(char));
     devices[i].free_size = (char *) malloc(20 * sizeof(char));
     devices[i].available_size = (char *) malloc(20 * sizeof(char));
     devices[i].used_size = (char *) malloc(20 * sizeof(char));
-    sprintf(devices[i].total_size, "%d", total);
-    sprintf(devices[i].free_size, "%d", free);
-    sprintf(devices[i].available_size, "%d", avail);
-    sprintf(devices[i].used_size, "%d", used);
-    /*printf("%s:\nblock size - %d\ntotal - %d\nfree - %d\navail - %d\n\n", devices[i].device_name,
-                                                                          bsize,
-                                                         total,
-                                                         free,
-                                                         avail);*/
+
+    long total = device_stats.f_blocks * device_stats.f_bsize;
+    if (total / 1024 < 1000) {
+      sprintf(devices[i].total_size, "%.1f KiB", (float) (total / 1024.0));
+    }
+    else if (total / 1048576 < 1000) {
+      sprintf(devices[i].total_size, "%.1f MiB", (float) (total / 1048576.0));
+    }
+    else {
+      sprintf(devices[i].total_size, "%.1f GiB", (float) (total / 1073741824.0));
+    }
+
+    long free = device_stats.f_bfree * device_stats.f_bsize;
+    if (free / 1024 < 1000) {
+      sprintf(devices[i].free_size, "%.1f KiB", (float) (free / 1024.0));
+    }
+    else if (total / 1048576 < 1000) {
+      sprintf(devices[i].free_size, "%.1f MiB", (float) (free / 1048576.0));
+    }
+    else {
+      sprintf(devices[i].free_size, "%.1f GiB", (float) (free / 1073741824.0));
+    }
+
+    long avail = device_stats.f_bavail * device_stats.f_bsize;
+    if (avail / 1024 < 1000) {
+      sprintf(devices[i].available_size, "%.1f KiB", (float) (avail / 1024.0));
+    }
+    else if (avail / 1048576 < 1000) {
+      sprintf(devices[i].available_size, "%.1f MiB", (float) (avail / 1048576.0));
+    }
+    else {
+      sprintf(devices[i].available_size, "%.1f GiB", (float) (avail / 1073741824.0));
+    }
+    
+    long used = total - free;
+    if (used / 1024 < 1000) {
+      sprintf(devices[i].used_size, "%.1f KiB", (float) (used / 1024.0));
+    }
+    else if (total / 1048576 < 1000) {
+      sprintf(devices[i].used_size, "%.1f MiB", (float) (used / 1048576.0));
+    }
+    else {
+      sprintf(devices[i].used_size, "%.1f GiB", (float) (used / 1073741824.0));
+    }
   }
 
   return devices;
