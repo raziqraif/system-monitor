@@ -82,13 +82,16 @@ char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
 
   fscanf(meminfo_fp, MEMINFO_FORMAT, &(usage->memtotal), &(usage->memavailable));
 
-  char *swap_total_line = get_line_by_key(file_to_str(MEMINFO_PATH), "SwapTotal");
+  char *meminfo_str = file_to_str(MEMINFO_PATH);
+  char *swap_total_line = get_line_by_key(meminfo_str, "SwapTotal");
   sscanf(swap_total_line, "SwapTotal: %lu%*[^\n]\n", &(usage->swaptotal));
   free(swap_total_line);
 
-  char *swap_free_line = get_line_by_key(file_to_str(MEMINFO_PATH), "SwapFree");
+  char *swap_free_line = get_line_by_key(meminfo_str, "SwapFree");
   sscanf(swap_free_line, "SwapFree: %lu%*[^\n]\n", &(usage->swapfree));
   free(swap_free_line);
+  free(meminfo_str);
+  meminfo_str = NULL;
 
   fscanf(net_dev_fp, "%*[^\n]\n");
   fscanf(net_dev_fp, "%*[^\n]\n");
@@ -143,12 +146,20 @@ char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
  * Free the malloc'd fields of a usage_t
  */
 void free_usage(usage_t *usage) {
+  int i = 0;
+  while (usage->cpus[i] != NULL) {
+    free(usage->cpus[i]);
+    usage->cpus[i] = NULL;
+    i++;
+  }
   free(usage->name);
   free(usage->mem_message);
   free(usage->swap_message);
+  free(usage->cpus);
   usage->name = NULL;
   usage->mem_message = NULL;
   usage->swap_message = NULL;
+  usage->cpus = NULL;
 } /* free_usage() */
 
 
