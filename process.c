@@ -721,3 +721,94 @@ void print_children(process_t *proc, int depth) {
     i++;
   }
 } /* print_children() */
+
+
+/*
+ * returns a NULL-terminated array of malloc'd fds_t
+ */
+fds_t **get_fds(int pid) {
+  char path[512];
+  sprintf(path, "/proc/%d/fd", pid);
+
+  DIR *dir = opendir(path);
+  if (dir == NULL) {
+    printf("Could not open dir: %s\n", path);
+    return NULL;
+  }
+
+  // fds->type = malloc(sizeof(char) * 2);
+  // fds->type[1] = '\0';
+  
+  int count = 0;
+  struct dirent *ent = readdir(dir);
+  while(ent != NULL) {
+    count++;
+    ent = readdir(dir);
+  }
+
+  fds_t **fds_arr = malloc(sizeof(fds_t *) * (count + 1));
+  fds_arr[count] = NULL;
+
+  rewinddir(dir);
+
+  int i = 0;
+  struct dirent *ent = readdir(dir);
+  while(ent != NULL) {
+    if (i == count) {
+      printf("souldn't be here!=======================\n");
+    }
+    fds_arr[i] = malloc(sizeof(fds_t));
+    fds_t *fds = fds_arr[i];
+    fds->fd_str = strdup(ent->d_name);
+    fds->object = strdup(ent->d_name);
+    switch (ent->d_type) {
+      case DT_BLK:
+        fds->type = strdup("block device");
+        break;
+      case DT_CHR:
+        fds->type = strdup("character device");
+        break;
+      case DT_DIR:
+        fds->type = strdup("directory");
+        break;
+      case DT_FIFO:
+        fds->type = strdup("named pipe (FIFO)");
+        break;
+      case DT_LNK:
+        fds->type = strdup("symbolic link");
+        break;
+      case DT_REG:
+        fds->type = strdup("regular file");
+        break;
+      case DT_SOCK:
+        fds->type = strdup("UNIX domain socket");
+        break;
+      case DT_UNKNOWN:
+        fds->type = strdup("unknown");
+        break;
+      default:
+        fds->type = strdup("error reading d_type");
+        break;
+    }
+    i++;
+    ent = readdir(dir);
+  }
+  closedir(dir);
+
+  return fds_arr;
+} /* get_fds() */
+
+
+/*
+ * free malloc'd fields of NULL-terminated array fds_t
+ */
+void free_fds(fds_t **fds_arr) {
+  int i = 0;
+  while (fds_arr[i] != NULL) {
+    free(fds_arr[i]);
+    fds_arr[i] = NULL;
+    i++;
+  }
+}
+
+

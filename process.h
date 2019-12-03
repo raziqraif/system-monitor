@@ -73,6 +73,12 @@ typedef struct {
   char *vmflags;
 } smap_t;
 
+typedef struct {
+  char *fd_str;
+  char *type;
+  char *object;
+} fds_t;
+
 char *file_to_str(char *filepath);
 char *get_uname(int uid);
 char *get_line_by_key(char *filebuffer, char *key);
@@ -90,5 +96,8 @@ void free_smaps(smap_t **smaps);
 void print_smaps(smap_t **smaps);
 void calc_proc_tree(proc_list_t *proc_list);
 void print_children(process_t *proc, int depth);
+
+fds_t **get_fds(int pid);
+void free_fds(fds_t **fds_arr);
 
 #endif // PROCESS_H
