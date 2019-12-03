@@ -332,15 +332,14 @@ void update_devices_treeview(application_t *app) {
   device_t *devices = get_devices();
   // TODO: Get list of devices
   for (int i = 0; devices[i].is_valid == 1; i++) {
-    device_t device = devices[i];
     gtk_list_store_append(liststore, &iter);
-    gtk_list_store_set(liststore, &iter, 0, device.device_name, -1);
-    gtk_list_store_set(liststore, &iter, 1, device.mount_point, -1);
-    gtk_list_store_set(liststore, &iter, 2, device.fstype, -1);
-    gtk_list_store_set(liststore, &iter, 3, "total", -1);
-    gtk_list_store_set(liststore, &iter, 4, "free", -1);
-    gtk_list_store_set(liststore, &iter, 5, "available", -1);
-    gtk_list_store_set(liststore, &iter, 6, "used", -1);
+    gtk_list_store_set(liststore, &iter, 0, devices[i].device_name, -1);
+    gtk_list_store_set(liststore, &iter, 1, devices[i].mount_point, -1);
+    gtk_list_store_set(liststore, &iter, 2, devices[i].fstype, -1);
+    gtk_list_store_set(liststore, &iter, 3, devices[i].total_size, -1);
+    gtk_list_store_set(liststore, &iter, 4, devices[i].free_size, -1);
+    gtk_list_store_set(liststore, &iter, 5, devices[i].available_size, -1);
+    gtk_list_store_set(liststore, &iter, 6, devices[i].used_size, -1);
   }
 } /* update_devices_treeview() */
 
