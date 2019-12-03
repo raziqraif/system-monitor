@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -419,7 +420,7 @@ proc_list_t *get_processes() {
     }
     ent = readdir(dir);
   }
-  printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
+  //printf("proc_list: len=%d, total_space=%d\n", proc_list->num_procs, proc_list->total_space);
   closedir(dir);
   return proc_list;
 } /* get_processes() */
@@ -765,35 +766,43 @@ fds_t **get_fds(int pid) {
     fds_arr[i] = malloc(sizeof(fds_t));
     fds_t *fds = fds_arr[i];
     fds->fd_str = strdup(ent->d_name);
-    fds->object = strdup(ent->d_name);
-    switch (ent->d_type) {
-      case DT_BLK:
-        fds->type = strdup("block device");
-        break;
-      case DT_CHR:
-        fds->type = strdup("character device");
-        break;
-      case DT_DIR:
-        fds->type = strdup("directory");
-        break;
-      case DT_FIFO:
-        fds->type = strdup("named pipe (FIFO)");
-        break;
-      case DT_LNK:
-        fds->type = strdup("symbolic link");
-        break;
-      case DT_REG:
-        fds->type = strdup("regular file");
-        break;
-      case DT_SOCK:
-        fds->type = strdup("UNIX domain socket");
-        break;
-      case DT_UNKNOWN:
-        fds->type = strdup("unknown");
-        break;
-      default:
-        fds->type = strdup("error reading d_type");
-        break;
+
+    char *readlink_path = malloc(sizeof(char *)
+                            * (strlen(path) + strlen(ent->d_name) + 1));
+    sprintf(readlink_path, "%s/%s", path, ent->d_name);
+    char buf[1024];
+    int nread = readlink(readlink_path, buf, 1023);
+    buf[nread] = '\0';
+    fds->object = strdup(buf);
+
+    struct stat fstat_buf = { 0 };
+
+    int fd_int = atoi(ent->d_name);
+    fstat(fd_int, &fstat_buf);
+
+    if (S_ISBLK(fstat_buf.st_mode)) {
+      fds->type = strdup("block device");
+    }
+    else if (S_ISCHR(fstat_buf.st_mode)) {
+      fds->type = strdup("character device");
+    }
+    else if (S_ISDIR(fstat_buf.st_mode)) {
+      fds->type = strdup("directory");
+    }
+    else if (S_ISFIFO(fstat_buf.st_mode)) {
+      fds->type = strdup("named pipe (Felse ifO)");
+    }
+    else if (S_ISLNK(fstat_buf.st_mode)) {
+      fds->type = strdup("symbolic link");
+    }
+    else if (S_ISREG(fstat_buf.st_mode)) {
+      fds->type = strdup("regular file");
+    }
+    else if (S_ISSOCK(fstat_buf.st_mode)) {
+      fds->type = strdup("UNIX domain socket");
+    }
+    else {
+      fds->type = strdup("error reading d_type");
     }
     i++;
     ent = readdir(dir);
@@ -816,6 +825,6 @@ void free_fds(fds_t **fds_arr) {
     fds_arr[i] = NULL;
     i++;
   }
-}
+} /* free_fds() */
 
 

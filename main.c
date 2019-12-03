@@ -106,7 +106,7 @@ bool timer_handler(application_t *app) {
       // TODO: Update the value
       int cpu_cores = 8;
       cpu[0] = cpuUtil / cpu_cores;
-      printf("Percentage of cpu utilization = %d%%\n", cpuUtil);
+      //printf("Percentage of cpu utilization = %d%%\n", cpuUtil);
       time1 = time2;
       gtk_widget_queue_draw(app->resources_tab->drw_cpu);
     }
