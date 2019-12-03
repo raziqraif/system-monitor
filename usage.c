@@ -118,13 +118,13 @@ char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
 
   //Generate messages
   char buf[512];
-  float memused_GiB = (((float) (usage->memtotal - usage->memavailable) / 1024.0) / 1024.0) / 1024.0;
-  float memtot_GiB = (((float) usage->memtotal / 1024.0) / 1024.0) / 1024.0;
+  float memused_GiB = (((float) (usage->memtotal - usage->memavailable) / 1024.0) / 1024.0);
+  float memtot_GiB = (((float) usage->memtotal / 1024.0) / 1024.0);
   sprintf(buf, MEM_MESSAGE, memused_GiB, memused_GiB / memtot_GiB, memtot_GiB);
   usage->mem_message = strdup(buf);
 
-  float swapused_GiB = (((float) (usage->swaptotal - usage->swapfree) / 1024.0) / 1024.0) / 1024.0;
-  float swaptot_GiB = (((float) usage->swaptotal / 1024.0) / 1024.0) / 1024.0;
+  float swapused_GiB = (((float) (usage->swaptotal - usage->swapfree) / 1024.0) / 1024.0);
+  float swaptot_GiB = (((float) usage->swaptotal / 1024.0) / 1024.0);
   sprintf(buf, MEM_MESSAGE, swapused_GiB, swapused_GiB / swaptot_GiB, swaptot_GiB);
   usage->swap_message = strdup(buf);
 

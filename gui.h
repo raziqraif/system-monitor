@@ -48,6 +48,11 @@ typedef struct resources {
   GtkWidget *lbl_resources_total_received;
   GtkWidget *lbl_resources_sending;
   GtkWidget *lbl_resources_total_sent;
+
+  int total_cpu_util;
+  int total_cpu_utils[100];
+  int prev_received_network;
+  int prev_sent_network;
 } resources_tab_t;
 
 // File systems tab in application
