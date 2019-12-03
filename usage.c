@@ -24,12 +24,12 @@ char MEMINFO_PATH[] = "/proc/meminfo";
 char NET_DEV_PATH[] = "/proc/net/dev";
 
 char MEM_MESSAGE[] = "%.1f GiB (%.1f%%) of %.1f GiB";
-char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB"
+char SWAP_MESSAGE[] = "%lu bytes (%.1f%%) of %.1f GiB";
 
 /*
  * mallocs a new usage_t and fills its fields
  */
-usage_t *get_usage() {
+  usage_t *get_usage() {
   FILE *stat_fp = fopen(STAT_PATH, "r");
   if (stat_fp == NULL) {
     printf("fopen error on %s", STAT_PATH);
