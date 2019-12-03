@@ -111,8 +111,7 @@ bool timer_handler(application_t *app) {
       }
 
       res_tab->total_cpu_utils[0] = res_tab->total_cpu_util / usage->num_cpus;
-      //printf("Percentage of cpu utilization = %d%%\n", 
-        res_tab->total_cpu_util);
+
       prev_time = cur_time;
       gtk_widget_queue_draw(app->resources_tab->drw_cpu);
     
